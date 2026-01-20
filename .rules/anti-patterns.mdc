@@ -1,0 +1,382 @@
+---
+alwaysApply: false
+---
+
+# Anti-Patrones a Evitar
+
+## Definición
+
+Los anti-patrones son soluciones comunes a problemas recurrentes que parecen correctas pero son contraproducentes. Este documento lista los anti-patrones más comunes a evitar en este proyecto.
+
+## 1. God Object (Objeto Dios)
+
+### ❌ Qué es
+
+Una clase que hace demasiadas cosas y tiene demasiadas responsabilidades.
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Una clase que hace TODO
+export class UserService {
+  async createUser() { }
+  async updateUser() { }
+  async deleteUser() { }
+  async sendEmail() { }
+  async validatePassword() { }
+  async generateToken() { }
+  async saveToDatabase() { }
+  // ... 50 métodos más
+}
+```
+
+### ✅ Solución
+
+Separar responsabilidades en clases específicas:
+- `CreateUserUseCase` - Crear usuario
+- `EmailService` - Enviar emails
+- `PasswordHasher` - Hash de passwords
+- `UserRepository` - Persistencia
+
+## 2. Anemic Domain Model (Modelo de Dominio Anémico)
+
+### ❌ Qué es
+
+Entidades que solo contienen datos (getters/setters) sin lógica de negocio.
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Entidad sin lógica de negocio
+export class Appointment {
+  id: string;
+  clientId: string;
+  professionalId: string;
+  dateTime: Date;
+  
+  // Solo getters/setters, sin lógica
+  getId() { return this.id; }
+  getClientId() { return this.clientId; }
+}
+```
+
+### ✅ Solución
+
+Mover lógica de negocio a las entidades:
+
+```typescript
+// ✅ BIEN: Entidad con lógica de dominio
+export class Appointment {
+  constructor(
+    private readonly id: string,
+    private readonly clientId: string,
+    private readonly professionalId: string,
+    private readonly dateTime: DateTime
+  ) {}
+
+  // Lógica de negocio en la entidad
+  isInThePast(): boolean {
+    return this.dateTime.isBefore(DateTime.now());
+  }
+
+  canBeCancelled(): boolean {
+    const hoursUntilAppointment = this.dateTime.diff(DateTime.now()).hours;
+    return hoursUntilAppointment > 24;
+  }
+}
+```
+
+## 3. Feature Envy
+
+### ❌ Qué es
+
+Un método que usa más datos o métodos de otra clase que de la propia.
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Método que accede mucho a otra clase
+export class AppointmentController {
+  async create(dto: CreateAppointmentDto) {
+    // Accede mucho a Appointment en lugar de usar sus métodos
+    if (dto.dateTime < new Date()) {
+      throw new Error('Past date');
+    }
+    if (dto.professionalId === dto.clientId) {
+      throw new Error('Same user');
+    }
+    // ... mucha lógica que debería estar en Appointment
+  }
+}
+```
+
+### ✅ Solución
+
+Mover la lógica a donde pertenece:
+
+```typescript
+// ✅ BIEN: Lógica en la entidad
+export class Appointment {
+  static create(data: CreateAppointmentData): Appointment {
+    // Validaciones aquí
+    if (data.dateTime.isInThePast()) {
+      throw new Error('Appointment cannot be in the past');
+    }
+    if (data.professionalId === data.clientId) {
+      throw new Error('Professional and client cannot be the same');
+    }
+    return new Appointment(/* ... */);
+  }
+}
+```
+
+## 4. Circular Dependencies (Dependencias Circulares)
+
+### ❌ Qué es
+
+Dos o más módulos/clases que se importan mutuamente.
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Dependencia circular
+// file-a.ts
+import { B } from './file-b';
+export class A {
+  useB() { new B().method(); }
+}
+
+// file-b.ts
+import { A } from './file-a'; // ❌ Circular
+export class B {
+  useA() { new A().method(); }
+}
+```
+
+### ✅ Solución
+
+1. Extraer dependencia común a un tercer módulo
+2. Usar dependency injection
+3. Refactorizar para eliminar la dependencia mutua
+
+```typescript
+// ✅ BIEN: Sin circularidad
+// common.ts
+export interface CommonInterface { }
+
+// file-a.ts
+import { CommonInterface } from './common';
+export class A implements CommonInterface { }
+
+// file-b.ts
+import { CommonInterface } from './common';
+export class B {
+  use(common: CommonInterface) { }
+}
+```
+
+## 5. Leaky Abstractions (Abstracciones Filtradas)
+
+### ❌ Qué es
+
+Una abstracción que expone detalles de implementación que deberían estar ocultos.
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Interface que expone detalles de Prisma
+export interface UserRepository {
+  // Expone que se usa Prisma
+  findMany(args: Prisma.UserFindManyArgs): Promise<User[]>;
+  
+  // Expone estructura de base de datos
+  findByEmailIncludeProfile(email: string): Promise<UserWithProfile>;
+}
+```
+
+### ✅ Solución
+
+Abstracción que oculta implementación:
+
+```typescript
+// ✅ BIEN: Interface independiente de implementación
+export interface UserRepository {
+  findById(id: string): Promise<User | null>;
+  findByEmail(email: Email): Promise<User | null>;
+  save(user: User): Promise<void>;
+  // No expone detalles de Prisma o SQL
+}
+```
+
+## 6. Premature Optimization (Optimización Prematura)
+
+### ❌ Qué es
+
+Optimizar código antes de medir y confirmar que hay un problema de rendimiento.
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Optimización compleja sin necesidad
+export class UserRepository {
+  // Cache complejo, memoización, etc. sin medir primero
+  private cache = new Map();
+  private memoizedQueries = new WeakMap();
+  // ... complejidad innecesaria para MVP
+}
+```
+
+### ✅ Solución
+
+Primero hacerlo funcionar, luego medir y optimizar si es necesario:
+
+```typescript
+// ✅ BIEN: Simple primero
+export class PrismaUserRepository {
+  async findById(id: string): Promise<User | null> {
+    // Implementación simple
+    return this.prisma.user.findUnique({ where: { id } });
+  }
+}
+// Optimizar solo si realmente se necesita después de medir
+```
+
+## 7. Gold Plating (Sobre-Diseño)
+
+### ❌ Qué es
+
+Agregar features o funcionalidades que no están en los requerimientos, "por si acaso".
+
+### ❌ Ejemplo Incorrecto
+
+Agregar al MVP:
+- Sistema de pagos (no requerido)
+- Panel administrativo (explícitamente fuera del alcance)
+- Chat entre usuarios (no requerido)
+- Cancelación de citas (fuera del MVP)
+
+### ✅ Solución
+
+Seguir estrictamente `proyect_requirements.md` y `technical_checklist.md`:
+- ✅ Implementar solo lo requerido
+- ✅ Consultar alcance antes de agregar features
+- ✅ Enfocarse en el MVP
+
+## 8. Magic Numbers/Strings (Números/Cadenas Mágicas)
+
+### ❌ Qué es
+
+Usar valores literales sin explicación o constantes.
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Números mágicos
+if (hoursUntilAppointment < 24) {
+  throw new Error('Cannot cancel');
+}
+
+// Strings mágicos
+if (user.role === 'profesional') { // Typo posible, sin validación
+  // ...
+}
+```
+
+### ✅ Solución
+
+Usar constantes con nombres descriptivos:
+
+```typescript
+// ✅ BIEN: Constantes
+const MIN_HOURS_FOR_CANCELLATION = 24;
+
+if (hoursUntilAppointment < MIN_HOURS_FOR_CANCELLATION) {
+  throw new Error('Cannot cancel');
+}
+
+// Value Objects o Enums
+enum Role {
+  CLIENT = 'CLIENT',
+  PROFESSIONAL = 'PROFESSIONAL',
+}
+
+if (user.role === Role.PROFESSIONAL) {
+  // ...
+}
+```
+
+## 9. Long Parameter List (Lista Larga de Parámetros)
+
+### ❌ Qué es
+
+Métodos o constructores con demasiados parámetros (más de 3-4).
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Demasiados parámetros
+createAppointment(
+  clientId: string,
+  professionalId: string,
+  date: Date,
+  time: string,
+  duration: number,
+  notes: string,
+  reminder: boolean,
+  // ... más parámetros
+) { }
+```
+
+### ✅ Solución
+
+Usar objetos/DTOs:
+
+```typescript
+// ✅ BIEN: Objeto con parámetros
+createAppointment(data: CreateAppointmentDto) {
+  // data contiene todos los parámetros organizados
+}
+```
+
+## 10. Shotgun Surgery (Cirugía de Escopeta)
+
+### ❌ Qué es
+
+Cambiar una feature requiere modificar múltiples archivos en diferentes lugares.
+
+### ❌ Ejemplo Incorrecto
+
+Para cambiar cómo se valida un email, hay que modificar:
+- Controller
+- Use Case
+- Entity
+- Repository
+- Tests en 5 lugares diferentes
+
+### ✅ Solución
+
+Centralizar lógica en un solo lugar (Value Object, por ejemplo):
+
+```typescript
+// ✅ BIEN: Validación centralizada
+export class Email {
+  constructor(private readonly value: string) {
+    if (!this.isValid(value)) {
+      throw new Error('Invalid email');
+    }
+  }
+  // Validación en un solo lugar
+}
+```
+
+## Checklist Anti-Patrones
+
+Antes de commit, verificar:
+- ✅ ¿No hay "God Objects"?
+- ✅ ¿Las entidades tienen lógica de negocio?
+- ✅ ¿No hay dependencias circulares?
+- ✅ ¿Las abstracciones no filtran implementación?
+- ✅ ¿No hay optimización prematura?
+- ✅ ¿Solo features del MVP?
+- ✅ ¿No hay magic numbers/strings?
+- ✅ ¿Los métodos no tienen demasiados parámetros?

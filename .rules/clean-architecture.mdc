@@ -1,0 +1,208 @@
+---
+alwaysApply: true
+---
+# Clean Architecture - Principios Fundamentales
+
+## Definición
+
+Clean Architecture organiza el código en capas concéntricas donde:
+- **Las capas internas NO dependen de las externas**
+- **La capa más externa depende de todas las internas**
+
+## Capas del Proyecto (de interno a externo)
+
+1. **Domain** (más interno) - Lógica de negocio pura
+2. **Application** - Casos de uso y orquestación
+3. **Infrastructure** - Implementaciones técnicas (DB, servicios externos)
+4. **Interfaces** (más externo) - Adaptadores (HTTP, CLI, etc.)
+
+## Regla de Dependencias
+
+```
+interfaces → infrastructure → application → domain
+interfaces → application → domain
+infrastructure → domain
+```
+
+**Traducido**:
+- `interfaces/` puede importar de todas las capas
+- `infrastructure/` puede importar de `domain/` y `application/`
+- `application/` puede importar de `domain/`
+- `domain/` NO puede importar de NINGUNA otra capa
+
+## Reglas por Capa
+
+### Domain Layer
+
+**¿Qué contiene?**
+- Entidades con lógica de negocio
+- Value Objects
+- Interfaces de repositorios y servicios
+- Reglas de negocio puras
+
+**¿Qué NO contiene?**
+- Frameworks (NestJS, Express, etc.)
+- Librerías de base de datos (Prisma, TypeORM, etc.)
+- Servicios externos (Email, SMS, etc.)
+- Dependencias de infraestructura
+
+**Ejemplo correcto**:
+```typescript
+// domain/entities/appointment.entity.ts
+export class Appointment {
+  constructor(
+    private readonly id: string,
+    private readonly clientId: string,
+    private readonly professionalId: string,
+    private readonly dateTime: DateTime
+  ) {}
+
+  // Lógica de negocio pura
+  isInThePast(): boolean {
+    return this.dateTime.isBefore(DateTime.now());
+  }
+}
+```
+
+### Application Layer
+
+**¿Qué contiene?**
+- Casos de uso (use cases)
+- Orquestación de lógica de negocio
+- DTOs internos
+
+**¿Qué NO contiene?**
+- Implementaciones de repositorios
+- Llamadas directas a servicios externos
+- Lógica HTTP
+
+**Ejemplo correcto**:
+```typescript
+// application/use-cases/create-appointment.usecase.ts
+export class CreateAppointmentUseCase {
+  constructor(
+    private readonly appointmentRepository: AppointmentRepository, // interface
+    private readonly availabilityRepository: AvailabilityRepository // interface
+  ) {}
+
+  async execute(data: CreateAppointmentDto): Promise<Appointment> {
+    // Orquestación usando interfaces, no implementaciones
+  }
+}
+```
+
+### Infrastructure Layer
+
+**¿Qué contiene?**
+- Implementaciones de repositorios (Prisma, etc.)
+- Servicios externos (Email, SMS, Google Calendar)
+- Configuraciones técnicas
+
+**Puede usar**:
+- ORMs, librerías de base de datos
+- APIs externas
+- Frameworks técnicos
+
+**Ejemplo correcto**:
+```typescript
+// infrastructure/database/repositories/prisma-appointment.repository.ts
+export class PrismaAppointmentRepository implements AppointmentRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  async save(appointment: Appointment): Promise<void> {
+    // Implementación con Prisma
+  }
+}
+```
+
+### Interfaces Layer
+
+**¿Qué contiene?**
+- Controladores HTTP (NestJS)
+- Guards de autenticación
+- Mappers DTO ↔ Domain
+- Configuración de providers (DI)
+
+**Responsabilidad**:
+- Recibir requests HTTP
+- Llamar a casos de uso
+- Transformar DTOs a entidades de dominio
+- Mapear respuestas
+
+**Ejemplo correcto**:
+```typescript
+// interfaces/http/controllers/appointment.controller.ts
+@Controller('appointments')
+export class AppointmentController {
+  constructor(
+    private readonly createAppointmentUseCase: CreateAppointmentUseCase
+  ) {}
+
+  @Post()
+  async create(@Body() dto: CreateAppointmentDto) {
+    // Controlador delgado: solo llama al caso de uso
+    return this.createAppointmentUseCase.execute(dto);
+  }
+}
+```
+
+## Principios Clave
+
+### 1. Independencia del Framework
+- El dominio debe ser independiente de NestJS
+- Se puede cambiar de framework sin tocar el dominio
+
+### 2. Independencia de la UI
+- La lógica de negocio no conoce HTTP
+- Se puede exponer por CLI, GraphQL, etc. sin cambios
+
+### 3. Independencia de la Base de Datos
+- El dominio no conoce Prisma o SQL
+- Se puede cambiar de DB sin tocar el dominio
+
+### 4. Testabilidad
+- Cada capa debe ser testeable independientemente
+- El dominio debe ser testeable sin mocks complejos
+
+## Señales de Violación
+
+Si encuentras estos patrones, hay una violación:
+
+1. **Import de NestJS en domain/**:
+   ```typescript
+   // ❌ MAL
+   import { Injectable } from '@nestjs/common';
+   ```
+
+2. **Import de Prisma en domain/**:
+   ```typescript
+   // ❌ MAL
+   import { PrismaClient } from '@prisma/client';
+   ```
+
+3. **Lógica HTTP en application/**:
+   ```typescript
+   // ❌ MAL
+   import { Request, Response } from 'express';
+   ```
+
+4. **Lógica de negocio en controllers**:
+   ```typescript
+   // ❌ MAL
+   @Controller()
+   export class UserController {
+     async create(@Body() dto) {
+       // Validación de negocio aquí
+       // Hash de password aquí
+       // Lógica compleja aquí
+     }
+   }
+   ```
+
+## Validación Continua
+
+Revisar en cada commit:
+- ✅ ¿El dominio está libre de frameworks?
+- ✅ ¿Los casos de uso orquestan sin depender de infraestructura?
+- ✅ ¿Los controladores son delgados?
+- ✅ ¿Las dependencias siguen el flujo correcto?

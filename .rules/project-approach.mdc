@@ -1,0 +1,198 @@
+---
+alwaysApply: true
+---
+
+# Enfoque del Proyecto - Challenge Técnico
+
+## Contexto del Proyecto
+
+Este proyecto es un **challenge técnico de un curso**. Por lo tanto:
+
+- ✅ **El aprendizaje y comprensión son prioritarios**
+- ✅ **Cada decisión arquitectónica debe ser entendida**
+- ✅ **La documentación es esencial para el aprendizaje**
+
+## Regla Fundamental: Entender Todo
+
+### Cada Decisión Debe Ser Comprensible
+
+**ANTES de implementar cualquier cambio significativo**:
+
+1. **Explicar el "por qué"**: ¿Por qué se toma esta decisión arquitectónica?
+2. **Documentar brevemente**: ¿Qué problema resuelve? ¿Qué alternativas se consideraron?
+3. **Asegurar comprensión**: ¿El estudiante puede entender y explicar la decisión?
+
+### Documentación de Decisiones
+
+Cada decisión técnica importante debe documentarse de forma breve y precisa:
+
+- **Decisión**: ¿Qué se decidió?
+- **Razón**: ¿Por qué se decidió así?
+- **Alternativas**: ¿Qué otras opciones se consideraron?
+
+**Ejemplo de documentación**:
+```typescript
+/**
+ * Decisión: Usar Strategy Pattern para notificaciones
+ * Razón: Permite agregar nuevos canales (SMS, Push) sin modificar código existente (OCP)
+ * Alternativas consideradas: Factory Pattern, pero Strategy es más flexible para este caso
+ */
+export interface NotificationStrategy { }
+```
+
+## Uso del Modo Agente
+
+### ❌ NO Abusar del Modo Agente
+
+**Reglas estrictas**:
+
+1. **NO usar modo agente para tareas simples** que se pueden hacer manualmente
+2. **NO crear múltiples archivos/directorios** antes de entender qué se está haciendo
+3. **NO ejecutar modo agente** sin antes haber planeado y entendido el alcance
+
+### ✅ Cuándo Usar Modo Agente
+
+Solo usar modo agente cuando:
+- ✅ Es una tarea **compleja y bien definida** que requiere múltiples pasos coordinados
+- ✅ **Ya se entiende** qué se va a implementar y por qué
+- ✅ Se ha **revisado y aprobado** el plan antes de ejecutar
+
+### ⚠️ Antes de Ejecutar Modo Agente
+
+**Checklist obligatorio**:
+
+- [ ] ¿Entiendo completamente qué se va a crear/modificar?
+- [ ] ¿He revisado el plan paso a paso?
+- [ ] ¿Es realmente necesario crear múltiples archivos de una vez?
+- [ ] ¿Puedo hacer esto manualmente y aprender en el proceso?
+
+**Regla de oro**: Si puedes hacerlo manualmente y entender cada paso, **hazlo manualmente**.
+
+### 🚫 Restricciones de Modo Agente
+
+**NO ejecutar modo agente si**:
+
+- ❌ Se van a crear **más de 3-5 archivos nuevos** sin revisión previa
+- ❌ Se van a crear **múltiples directorios** sin entender la estructura
+- ❌ La tarea es **simple** (1-2 archivos, cambios menores)
+- ❌ **No hay claridad** sobre qué se está implementando
+
+### ✅ Proceso Recomendado
+
+1. **Planificar primero**: Definir qué archivos y dónde
+2. **Revisar**: Verificar que el plan sigue las reglas (folder-structure, dependencies, etc.)
+3. **Crear incrementalmente**: Si es necesario crear muchos archivos, hacerlo en pequeños pasos
+4. **Documentar**: Explicar cada decisión importante
+
+## Filosofía de Aprendizaje
+
+### Pequeños Pasos, Mucha Comprensión
+
+**Mejor**:
+- ✅ Crear 1-2 archivos, entenderlos, luego continuar
+- ✅ Implementar feature por feature, no todo de una vez
+- ✅ Revisar código generado antes de continuar
+
+**Peor**:
+- ❌ Crear 10+ archivos sin revisar
+- ❌ Implementar múltiples features simultáneamente
+- ❌ Avanzar sin entender lo que se hizo
+
+### Documentación Continua
+
+**Mientras se implementa**:
+
+- Documentar decisiones en comentarios JSDoc
+- Explicar "por qué" en commits
+- Revisar y entender cada archivo antes de crear el siguiente
+
+## Ejemplos de Buenas Prácticas
+
+### ✅ BIEN: Implementación Incremental
+
+```
+Paso 1: Crear entidad User (1 archivo)
+  → Revisar y entender
+  → Verificar que sigue las reglas
+
+Paso 2: Crear UserRepository interface (1 archivo)
+  → Revisar y entender
+  → Verificar dependencias
+
+Paso 3: Crear caso de uso CreateUser (1 archivo)
+  → Revisar y entender
+  → Verificar que usa la interface, no implementación
+
+Paso 4: Crear implementación PrismaUserRepository (1 archivo)
+  → Revisar y entender
+```
+
+### ❌ MAL: Creación Masiva
+
+```
+❌ Modo agente crea:
+  - user.entity.ts
+  - professional.entity.ts
+  - appointment.entity.ts
+  - availability.entity.ts
+  - user.repository.ts
+  - professional.repository.ts
+  - appointment.repository.ts
+  - create-user.usecase.ts
+  - create-professional.usecase.ts
+  - create-appointment.usecase.ts
+  - ... 10+ archivos más
+
+Sin revisar ni entender cada uno antes de continuar
+```
+
+## Prioridad: Comprensión sobre Velocidad
+
+**En este proyecto**:
+- 🎓 **Aprender** es más importante que **terminar rápido**
+- 📚 **Entender** cada decisión es más valioso que **implementar todo**
+- 🔍 **Revisar** y **comprender** antes de avanzar
+
+## Checklist Antes de Crear Archivos
+
+Antes de crear/modificar cualquier archivo, preguntarse:
+
+- [ ] ¿Entiendo completamente qué voy a crear?
+- [ ] ¿Sé por qué este archivo va en esta ubicación?
+- [ ] ¿Entiendo las dependencias que va a tener?
+- [ ] ¿Puedo explicar la decisión arquitectónica?
+- [ ] ¿He revisado las reglas relevantes (folder-structure, dependencies, etc.)?
+
+Si alguna respuesta es **NO**, detenerse y aclarar antes de continuar.
+
+## Documentación de Decisiones Técnicas
+
+### Formato Sugerido para Documentar
+
+En comentarios JSDoc o en el código:
+
+```typescript
+/**
+ * DECISIÓN ARQUITECTÓNICA:
+ * - Qué: Uso de Value Object Email para validación
+ * - Por qué: Centraliza validación de email y evita duplicación
+ * - Alternativas: Validación en DTOs, pero Value Object es más reutilizable
+ */
+export class Email {
+  constructor(private readonly value: string) {
+    if (!this.isValid(value)) {
+      throw new Error('Invalid email format');
+    }
+  }
+}
+```
+
+## Resumen
+
+1. **Este es un proyecto de aprendizaje** - La comprensión es clave
+2. **Documentar decisiones** - Cada decisión importante debe tener su "por qué"
+3. **No abusar del modo agente** - Usar solo cuando es realmente necesario
+4. **Incremental y comprensible** - Pasos pequeños, mucha revisión
+5. **Antes de crear muchos archivos** - Planificar, revisar, entender
+
+**Regla de oro**: Si no puedes explicar por qué algo se implementa de cierta forma, no estás listo para implementarlo.

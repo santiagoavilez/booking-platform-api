@@ -1,0 +1,209 @@
+---
+alwaysApply: false
+---
+
+# Strategy Pattern para Notificaciones
+
+## Propósito
+
+El sistema de notificaciones usa Strategy Pattern para permitir múltiples canales (Email, SMS, Push) sin modificar el código existente cuando se agregan nuevos canales.
+
+## Estructura
+
+### 1. Interface en Domain (Contrato)
+
+```typescript
+// domain/services/notification-strategy.interface.ts
+export interface NotificationStrategy {
+  send(to: string, message: string): Promise<void>;
+}
+```
+
+**Regla**: La interface debe estar en `domain/` para mantenerla independiente de implementaciones.
+
+### 2. Implementaciones en Infrastructure (Estrategias Concretas)
+
+```typescript
+// infrastructure/notifications/email.strategy.ts
+import { NotificationStrategy } from '../../domain/services/notification-strategy.interface';
+
+export class EmailStrategy implements NotificationStrategy {
+  async send(to: string, message: string): Promise<void> {
+    // Implementación específica de Email
+  }
+}
+```
+
+```typescript
+// infrastructure/notifications/sms.strategy.ts
+import { NotificationStrategy } from '../../domain/services/notification-strategy.interface';
+
+export class SMSStrategy implements NotificationStrategy {
+  async send(to: string, message: string): Promise<void> {
+    // Implementación específica de SMS
+  }
+}
+```
+
+```typescript
+// infrastructure/notifications/push.strategy.ts
+import { NotificationStrategy } from '../../domain/services/notification-strategy.interface';
+
+export class PushStrategy implements NotificationStrategy {
+  async send(to: string, message: string): Promise<void> {
+    // Implementación específica de Push
+  }
+}
+```
+
+### 3. Factory para Seleccionar Estrategia (Opcional)
+
+```typescript
+// infrastructure/notifications/notification-strategy.factory.ts
+import { NotificationStrategy } from '../../domain/services/notification-strategy.interface';
+import { EmailStrategy } from './email.strategy';
+import { SMSStrategy } from './sms.strategy';
+import { PushStrategy } from './push.strategy';
+
+export enum NotificationChannel {
+  EMAIL = 'email',
+  SMS = 'sms',
+  PUSH = 'push',
+}
+
+export class NotificationStrategyFactory {
+  static create(channel: NotificationChannel): NotificationStrategy {
+    switch (channel) {
+      case NotificationChannel.EMAIL:
+        return new EmailStrategy();
+      case NotificationChannel.SMS:
+        return new SMSStrategy();
+      case NotificationChannel.PUSH:
+        return new PushStrategy();
+      default:
+        throw new Error(`Unknown notification channel: ${channel}`);
+    }
+  }
+}
+```
+
+## Uso en Casos de Uso
+
+```typescript
+// application/use-cases/send-notifications.usecase.ts
+import { NotificationStrategy } from '../../domain/services/notification-strategy.interface';
+import { NotificationChannel } from '../../infrastructure/notifications/notification-strategy.factory';
+
+export class SendNotificationsUseCase {
+  async execute(
+    recipient: string,
+    message: string,
+    channels: NotificationChannel[]
+  ): Promise<void> {
+    for (const channel of channels) {
+      const strategy = NotificationStrategyFactory.create(channel);
+      await strategy.send(recipient, message);
+    }
+  }
+}
+```
+
+## Reglas del Pattern
+
+### ✅ Principio Open/Closed
+
+- **Abierto para extensión**: Agregar nuevo canal = nueva clase
+- **Cerrado para modificación**: No modificar código existente
+
+**Ejemplo de extensión**:
+```typescript
+// infrastructure/notifications/telegram.strategy.ts (NUEVO)
+export class TelegramStrategy implements NotificationStrategy {
+  async send(to: string, message: string): Promise<void> {
+    // Nueva implementación sin modificar las existentes
+  }
+}
+```
+
+### ✅ Todas las Estrategias Implementan el Mismo Contrato
+
+Todas deben implementar `NotificationStrategy` con el método `send(to: string, message: string)`.
+
+**❌ MAL**:
+```typescript
+// ❌ Violación del contrato
+export class EmailStrategy implements NotificationStrategy {
+  async sendEmail(to: string, message: string): Promise<void> {
+    // Método diferente al contrato
+  }
+}
+```
+
+### ✅ Cada Estrategia es Independiente
+
+Cada estrategia debe ser independiente y no depender de otras estrategias.
+
+## Ubicación de Archivos
+
+### Domain (Interface)
+- `src/domain/services/notification-strategy.interface.ts`
+
+### Infrastructure (Implementaciones)
+- `src/infrastructure/notifications/email.strategy.ts`
+- `src/infrastructure/notifications/sms.strategy.ts`
+- `src/infrastructure/notifications/push.strategy.ts`
+- `src/infrastructure/notifications/notification-strategy.factory.ts`
+
+## Agregar Nuevo Canal
+
+### Pasos para Agregar Canal "Telegram"
+
+1. **Crear nueva estrategia**:
+```typescript
+// infrastructure/notifications/telegram.strategy.ts
+export class TelegramStrategy implements NotificationStrategy {
+  async send(to: string, message: string): Promise<void> {
+    // Implementación Telegram
+  }
+}
+```
+
+2. **Agregar al enum** (si usas factory):
+```typescript
+// infrastructure/notifications/notification-strategy.factory.ts
+export enum NotificationChannel {
+  EMAIL = 'email',
+  SMS = 'sms',
+  PUSH = 'push',
+  TELEGRAM = 'telegram', // NUEVO
+}
+```
+
+3. **Agregar al factory** (si usas factory):
+```typescript
+static create(channel: NotificationChannel): NotificationStrategy {
+  switch (channel) {
+    // ... casos existentes
+    case NotificationChannel.TELEGRAM:
+      return new TelegramStrategy(); // NUEVO
+  }
+}
+```
+
+4. **Listo**: El resto del código no necesita cambios.
+
+## Ventajas del Pattern
+
+1. **Extensibilidad**: Agregar canales sin modificar código existente
+2. **Testabilidad**: Cada estrategia se testea independientemente
+3. **Mantenibilidad**: Cambios en un canal no afectan otros
+4. **Separación de responsabilidades**: Cada estrategia tiene una responsabilidad única
+
+## Checklist Strategy Pattern
+
+Antes de agregar una nueva estrategia:
+- ✅ ¿Implementa `NotificationStrategy` completamente?
+- ✅ ¿Está en `infrastructure/notifications/`?
+- ✅ ¿Sigue el mismo contrato que las otras estrategias?
+- ✅ ¿No modifica código existente?
+- ✅ ¿Se puede testear independientemente?

@@ -1,0 +1,289 @@
+---
+alwaysApply: true
+---
+
+# Convenciones de Código
+
+## Nomenclatura de Archivos
+
+### Entidades de Dominio
+- **Formato**: `*.entity.ts`
+- **Ubicación**: `src/domain/entities/`
+- **Ejemplos**: 
+  - `user.entity.ts`
+  - `appointment.entity.ts`
+  - `availability.entity.ts`
+
+### Value Objects
+- **Formato**: `*.vo.ts`
+- **Ubicación**: `src/domain/value-objects/`
+- **Ejemplos**:
+  - `email.vo.ts`
+  - `datetime.vo.ts`
+  - `role.vo.ts`
+
+### Repositorios (Interfaces)
+- **Formato**: `*.repository.ts`
+- **Ubicación**: `src/domain/repositories/`
+- **Ejemplos**:
+  - `user.repository.ts`
+  - `appointment.repository.ts`
+- **Nota**: Solo interfaces, nunca implementaciones
+
+### Repositorios (Implementaciones)
+- **Formato**: `prisma-*.repository.ts`
+- **Ubicación**: `src/infrastructure/database/repositories/`
+- **Ejemplos**:
+  - `prisma-user.repository.ts`
+  - `prisma-appointment.repository.ts`
+
+### Casos de Uso
+- **Formato**: `*-usecase.ts` o `*-use-case.ts`
+- **Ubicación**: `src/application/use-cases/`
+- **Ejemplos**:
+  - `create-user.usecase.ts`
+  - `create-appointment.usecase.ts`
+  - `login-user.usecase.ts`
+
+### Controladores HTTP
+- **Formato**: `*.controller.ts`
+- **Ubicación**: `src/interfaces/http/controllers/`
+- **Ejemplos**:
+  - `auth.controller.ts`
+  - `appointment.controller.ts`
+  - `professional.controller.ts`
+
+### Guards
+- **Formato**: `*.guard.ts`
+- **Ubicación**: `src/interfaces/http/guards/`
+- **Ejemplos**:
+  - `jwt-auth.guard.ts`
+
+### Estrategias (Strategy Pattern)
+- **Formato**: `*.strategy.ts`
+- **Ubicación**: `src/infrastructure/notifications/`
+- **Ejemplos**:
+  - `email.strategy.ts`
+  - `sms.strategy.ts`
+  - `push.strategy.ts`
+
+### Mappers
+- **Formato**: `*.mapper.ts`
+- **Ubicación**: `src/interfaces/http/mappers/`
+- **Ejemplos**:
+  - `appointment.mapper.ts`
+
+### DTOs
+- **Formato**: `*.dto.ts`
+- **Ubicación**: 
+  - DTOs internos: `src/application/dtos/`
+  - DTOs HTTP: `src/interfaces/http/dto/` (si existe)
+
+### Interfaces de Servicios
+- **Formato**: `*.interface.ts` o `*-strategy.interface.ts`
+- **Ubicación**: `src/domain/services/`
+- **Ejemplos**:
+  - `notification-strategy.interface.ts`
+
+### Servicios de Infraestructura
+- **Formato**: `*.service.ts`
+- **Ubicación**: Según el tipo:
+  - `src/infrastructure/calendar/` (ej: `google-calendar.service.ts`)
+  - `src/infrastructure/notifications/` (para factories)
+
+## Nomenclatura de Clases
+
+### Clases de Entidades
+```typescript
+// PascalCase, singular
+export class User { }
+export class Appointment { }
+```
+
+### Casos de Uso
+```typescript
+// PascalCase, verbo + sustantivo + UseCase
+export class CreateUserUseCase { }
+export class LoginUserUseCase { }
+```
+
+### Repositorios
+```typescript
+// Interfaces: PascalCase + Repository
+export interface UserRepository { }
+
+// Implementaciones: Prisma + PascalCase + Repository
+export class PrismaUserRepository implements UserRepository { }
+```
+
+### Controladores
+```typescript
+// PascalCase + Controller
+export class AppointmentController { }
+```
+
+### Estrategias
+```typescript
+// PascalCase + Strategy
+export class EmailStrategy implements NotificationStrategy { }
+```
+
+## Estructura de Clases
+
+### Usar TypeScript con Tipos Explícitos
+
+**✅ BIEN**:
+```typescript
+export class User {
+  constructor(
+    private readonly id: string,
+    private readonly email: string,
+    private readonly role: Role
+  ) {}
+}
+```
+
+**❌ MAL**:
+```typescript
+export class User {
+  constructor(
+    private readonly id: any, // ❌ any
+    private readonly email, // ❌ sin tipo
+    private readonly role
+  ) {}
+}
+```
+
+### Evitar `any`
+
+- ❌ NO usar `any` salvo casos excepcionales justificados
+- ✅ Usar tipos específicos o `unknown` si el tipo es desconocido
+- ✅ Tipar todos los parámetros y retornos
+
+### Documentación con JSDoc
+
+**Usar JSDoc cuando**:
+- La intención del código no sea obvia
+- Los parámetros necesiten explicación
+- Métodos complejos requieran contexto
+
+**✅ BIEN**:
+```typescript
+/**
+ * Valida si un horario está disponible para una cita.
+ * 
+ * @param professionalId - ID del profesional
+ * @param dateTime - Fecha y hora a validar
+ * @returns true si está disponible, false si está ocupado
+ */
+async isAvailable(professionalId: string, dateTime: DateTime): Promise<boolean> {
+  // ...
+}
+```
+
+## Manejo de Errores
+
+### Excepciones de Dominio
+
+Para errores de negocio, crear excepciones específicas en el dominio:
+
+```typescript
+// domain/exceptions/appointment-not-available.exception.ts
+export class AppointmentNotAvailableException extends Error {
+  constructor(dateTime: DateTime) {
+    super(`Appointment not available at ${dateTime}`);
+  }
+}
+```
+
+### Excepciones HTTP
+
+Para respuestas HTTP, usar excepciones de NestJS:
+
+```typescript
+// En controllers o casos de uso que manejan HTTP
+throw new BadRequestException('Invalid input');
+throw new NotFoundException('User not found');
+```
+
+### NO Filtrar Información Sensible
+
+**❌ MAL**:
+```typescript
+throw new Error(`Password incorrect for user ${userId}`); // Expone ID
+```
+
+**✅ BIEN**:
+```typescript
+throw new UnauthorizedException('Invalid credentials');
+```
+
+## Importaciones
+
+### Orden de Importaciones
+
+1. Librerías externas (NestJS, Prisma, etc.)
+2. Imports relativos de otras capas
+3. Imports relativos de la misma capa
+4. Tipos (con `type` cuando sea solo tipo)
+
+**Ejemplo**:
+```typescript
+// 1. Externas
+import { Injectable } from '@nestjs/common';
+
+// 2. Otras capas
+import { UserRepository } from '../../../domain/repositories/user.repository';
+import { CreateUserUseCase } from '../../use-cases/create-user.usecase';
+
+// 3. Misma capa
+import { UserMapper } from '../mappers/user.mapper';
+
+// 4. Tipos
+import type { CreateUserDto } from '../../../application/dtos/create-user.dto';
+```
+
+### Evitar Imports Circulares
+
+- ❌ NO crear dependencias circulares entre módulos
+- ✅ Si se detecta, refactorizar la estructura
+
+## Formato de Código
+
+### Prettier
+
+El proyecto usa Prettier para formato. Ejecutar antes de commit:
+```bash
+npm run format
+```
+
+### Indentación
+- Usar 2 espacios (configurado en Prettier)
+
+### Comillas
+- Preferir comillas simples para strings (configurado en Prettier)
+
+## Nombres de Variables y Funciones
+
+### Variables
+- **camelCase**: `userId`, `appointmentDate`, `isAvailable`
+
+### Funciones/Métodos
+- **camelCase**: `getUserById()`, `createAppointment()`, `validateAvailability()`
+
+### Constantes
+- **SCREAMING_SNAKE_CASE**: `MAX_APPOINTMENT_DURATION`, `DEFAULT_TIMEZONE`
+
+### Privadas/Protegidas
+- Usar `private` o `protected` según corresponda
+- Prefijo `private readonly` para dependencias inyectadas
+
+## Checklist de Convenciones
+
+Antes de commit:
+- ✅ ¿Los nombres de archivos siguen las convenciones?
+- ✅ ¿Los nombres de clases siguen PascalCase?
+- ✅ ¿Las variables y funciones siguen camelCase?
+- ✅ ¿Están tipados todos los parámetros?
+- ✅ ¿No hay uso de `any`?
+- ✅ ¿El código está formateado con Prettier?

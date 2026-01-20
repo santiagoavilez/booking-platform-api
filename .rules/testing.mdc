@@ -1,0 +1,317 @@
+---
+alwaysApply: false
+---
+
+# Reglas de Testing
+
+## Estructura de Tests
+
+### Tests Unitarios
+
+**Para qué**: Lógica de negocio pura, casos de uso, entidades, value objects.
+
+**Ubicación**: Junto al archivo de código
+- `*.spec.ts` al lado del archivo original
+- Ejemplo: `create-appointment.usecase.ts` → `create-appointment.usecase.spec.ts`
+
+**Ejemplo**:
+```typescript
+// application/use-cases/create-appointment.usecase.spec.ts
+import { CreateAppointmentUseCase } from './create-appointment.usecase';
+
+describe('CreateAppointmentUseCase', () => {
+  it('should create an appointment', () => {
+    // Test unitario
+  });
+});
+```
+
+### Tests de Integración
+
+**Para qué**: Repositorios, integraciones con base de datos, servicios externos.
+
+**Ubicación**: Junto al archivo o en carpeta `__tests__/`
+
+**Ejemplo**:
+```typescript
+// infrastructure/database/repositories/__tests__/prisma-appointment.repository.spec.ts
+import { PrismaAppointmentRepository } from '../prisma-appointment.repository';
+
+describe('PrismaAppointmentRepository', () => {
+  it('should save appointment to database', async () => {
+    // Test de integración con DB real o mock
+  });
+});
+```
+
+### Tests E2E (End-to-End)
+
+**Para qué**: Endpoints HTTP completos, flujos de usuario completos.
+
+**Ubicación**: `test/` en la raíz del proyecto
+
+**Ejemplo**:
+```typescript
+// test/appointment.e2e-spec.ts
+import request from 'supertest';
+
+describe('Appointment E2E', () => {
+  it('POST /appointments should create appointment', () => {
+    // Test E2E completo
+  });
+});
+```
+
+## Convenciones de Nombres
+
+### Archivos de Test
+- **Formato**: `*.spec.ts` para tests unitarios e integración
+- **Formato**: `*.e2e-spec.ts` para tests E2E
+- **Ubicación**: Junto al código o en `test/` para E2E
+
+### Describe Blocks
+```typescript
+describe('ClassName', () => {
+  describe('methodName', () => {
+    it('should do something specific', () => {
+      // test
+    });
+  });
+});
+```
+
+### Test Names
+- Usar descripciones claras que expliquen qué debería hacer el código
+- Formato: `should [acción esperada]`
+- Ejemplos:
+  - `should create appointment when available`
+  - `should throw error when appointment is in the past`
+  - `should send notification to both client and professional`
+
+## Mocking en Tests
+
+### Mocking de Repositorios
+
+**✅ BIEN**:
+```typescript
+const mockUserRepository: jest.Mocked<UserRepository> = {
+  findById: jest.fn(),
+  save: jest.fn(),
+};
+
+// En el test
+mockUserRepository.findById.mockResolvedValue(user);
+```
+
+### Mocking de Servicios Externos
+
+**✅ BIEN**:
+```typescript
+const mockNotificationStrategy: jest.Mocked<NotificationStrategy> = {
+  send: jest.fn(),
+};
+```
+
+### Evitar Mocking del Dominio
+
+**❌ MAL**: Mockear entidades de dominio o value objects
+**✅ BIEN**: Usar instancias reales de entidades en tests
+
+## Coverage
+
+### Cobertura Mínima Recomendada
+
+- **Domain**: 100% (lógica crítica)
+- **Application (Use Cases)**: >90%
+- **Infrastructure**: >80%
+- **Interfaces (Controllers)**: >70%
+
+### Ejecutar Coverage
+
+```bash
+npm run test:cov
+```
+
+## Estructura AAA (Arrange-Act-Assert)
+
+**✅ BIEN**:
+```typescript
+it('should create appointment when available', async () => {
+  // Arrange: Preparar datos y mocks
+  const appointmentData = {
+    professionalId: 'prof-1',
+    clientId: 'client-1',
+    dateTime: new DateTime('2026-01-20T10:00:00Z'),
+  };
+  const mockRepository = createMockRepository();
+
+  // Act: Ejecutar la acción
+  const result = await useCase.execute(appointmentData);
+
+  // Assert: Verificar resultado
+  expect(result).toBeDefined();
+  expect(mockRepository.save).toHaveBeenCalledWith(expect.any(Appointment));
+});
+```
+
+## Testear el Dominio
+
+### Entidades
+
+**✅ BIEN**: Testear lógica de negocio de entidades
+
+```typescript
+// domain/entities/appointment.entity.spec.ts
+describe('Appointment', () => {
+  it('should throw error when date is in the past', () => {
+    const pastDate = DateTime.now().subtract({ days: 1 });
+    
+    expect(() => {
+      new Appointment('id', 'client', 'prof', pastDate);
+    }).toThrow('Appointment cannot be in the past');
+  });
+});
+```
+
+### Value Objects
+
+**✅ BIEN**: Testear validación de value objects
+
+```typescript
+// domain/value-objects/email.vo.spec.ts
+describe('Email', () => {
+  it('should throw error for invalid email format', () => {
+    expect(() => {
+      new Email('invalid-email');
+    }).toThrow('Invalid email format');
+  });
+});
+```
+
+## Testear Casos de Uso
+
+### Mockear Dependencias
+
+**✅ BIEN**:
+```typescript
+// application/use-cases/create-appointment.usecase.spec.ts
+describe('CreateAppointmentUseCase', () => {
+  let useCase: CreateAppointmentUseCase;
+  let mockAppointmentRepository: jest.Mocked<AppointmentRepository>;
+  let mockAvailabilityRepository: jest.Mocked<AvailabilityRepository>;
+
+  beforeEach(() => {
+    mockAppointmentRepository = {
+      save: jest.fn(),
+    };
+    mockAvailabilityRepository = {
+      isAvailable: jest.fn(),
+    };
+    
+    useCase = new CreateAppointmentUseCase(
+      mockAppointmentRepository,
+      mockAvailabilityRepository
+    );
+  });
+
+  it('should create appointment when available', async () => {
+    // Arrange
+    mockAvailabilityRepository.isAvailable.mockResolvedValue(true);
+    
+    // Act
+    const result = await useCase.execute(validData);
+    
+    // Assert
+    expect(mockAppointmentRepository.save).toHaveBeenCalled();
+  });
+});
+```
+
+## Testear Repositorios (Integración)
+
+### Usar Base de Datos de Test
+
+**✅ BIEN**: Usar Prisma con base de datos de test separada
+
+```typescript
+// infrastructure/database/repositories/__tests__/prisma-user.repository.spec.ts
+describe('PrismaUserRepository (Integration)', () => {
+  let repository: PrismaUserRepository;
+  let prisma: PrismaClient;
+
+  beforeAll(async () => {
+    prisma = new PrismaClient({
+      // Conexión a DB de test
+    });
+    repository = new PrismaUserRepository(prisma);
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  it('should save and retrieve user', async () => {
+    // Test con DB real de test
+  });
+});
+```
+
+## Testear Controllers (E2E o Unit)
+
+### E2E con Supertest
+
+**✅ BIEN**:
+```typescript
+// test/appointment.e2e-spec.ts
+describe('AppointmentController (e2e)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const moduleFixture = await Test.createTestingModule({
+      // Configurar módulo de test
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+
+  it('/appointments (POST)', () => {
+    return request(app.getHttpServer())
+      .post('/appointments')
+      .send(validAppointmentData)
+      .expect(201);
+  });
+});
+```
+
+## Principios de Testing
+
+### 1. Tests Independientes
+
+Cada test debe poder ejecutarse independientemente sin depender de otros tests.
+
+### 2. Tests Determinísticos
+
+Los tests deben dar el mismo resultado siempre (sin aleatoriedad, sin dependencias externas inestables).
+
+### 3. Tests Rápidos
+
+Los tests unitarios deben ser rápidos (<100ms cada uno). Los tests de integración pueden ser más lentos.
+
+### 4. Tests Claros
+
+El nombre del test debe explicar claramente qué se está testeando y qué resultado se espera.
+
+### 5. Un Assert por Concepto
+
+Preferir múltiples `expect()` relacionados que verifiquen un mismo concepto, pero evitar tests que validen demasiadas cosas diferentes.
+
+## Checklist de Testing
+
+Antes de commit:
+- ✅ ¿Tengo tests para la lógica nueva?
+- ✅ ¿Los nombres de los tests son descriptivos?
+- ✅ ¿Los tests siguen la estructura AAA?
+- ✅ ¿Estoy mockeando las dependencias correctamente?
+- ✅ ¿Los tests son independientes?
+- ✅ ¿El código de test es claro y mantenible?

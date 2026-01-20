@@ -1,0 +1,329 @@
+---
+alwaysApply: false
+---
+
+# Inyección de Dependencias (Dependency Injection)
+
+## Principio
+
+La inyección de dependencias permite que las clases dependan de abstracciones (interfaces) en lugar de implementaciones concretas, siguiendo el Dependency Inversion Principle (DIP).
+
+## Configuración en NestJS
+
+### Ubicación de Providers
+
+**Archivo**: `src/interfaces/providers.ts` o por módulo según organización.
+
+Este archivo mapea las interfaces (tokens) con sus implementaciones concretas.
+
+### Estructura de Providers
+
+```typescript
+// interfaces/providers.ts
+import { UserRepository } from '../../domain/repositories/user.repository';
+import { PrismaUserRepository } from '../../infrastructure/database/repositories/prisma-user.repository';
+
+export const USER_REPOSITORY = Symbol('UserRepository');
+
+export const userProviders = [
+  {
+    provide: USER_REPOSITORY, // Token (puede ser string o Symbol)
+    useClass: PrismaUserRepository, // Implementación concreta
+  },
+];
+```
+
+## Reglas de Inyección
+
+### 1. Los Casos de Uso Dependen de Interfaces
+
+**✅ BIEN**:
+```typescript
+// application/use-cases/create-user.usecase.ts
+import { UserRepository } from '../../domain/repositories/user.repository';
+
+export class CreateUserUseCase {
+  constructor(
+    private readonly userRepository: UserRepository // Interface, no implementación
+  ) {}
+}
+```
+
+**❌ MAL**:
+```typescript
+// ❌ NO depender directamente de la implementación
+import { PrismaUserRepository } from '../../infrastructure/database/repositories/prisma-user.repository';
+
+export class CreateUserUseCase {
+  constructor(
+    private readonly userRepository: PrismaUserRepository // ❌ Implementación concreta
+  ) {}
+}
+```
+
+### 2. Los Providers Conectan Interfaces con Implementaciones
+
+```typescript
+// interfaces/providers.ts
+{
+  provide: 'UserRepository', // o Symbol, o interface como token
+  useClass: PrismaUserRepository, // Implementación
+}
+```
+
+### 3. NestJS Usa los Providers para Resolver Dependencias
+
+```typescript
+// app.module.ts o feature module
+import { userProviders } from './interfaces/providers';
+
+@Module({
+  providers: [
+    CreateUserUseCase,
+    ...userProviders, // Inyecta UserRepository → PrismaUserRepository
+  ],
+})
+export class AppModule {}
+```
+
+## Tokens de Inyección
+
+### Opción 1: String Token (Simple)
+
+```typescript
+// interfaces/providers.ts
+export const userProviders = [
+  {
+    provide: 'UserRepository', // String token
+    useClass: PrismaUserRepository,
+  },
+];
+
+// application/use-cases/create-user.usecase.ts
+@Injectable()
+export class CreateUserUseCase {
+  constructor(
+    @Inject('UserRepository') // Inyectar con string token
+    private readonly userRepository: UserRepository
+  ) {}
+}
+```
+
+### Opción 2: Symbol Token (Recomendado)
+
+```typescript
+// interfaces/providers.ts
+export const USER_REPOSITORY = Symbol('UserRepository');
+
+export const userProviders = [
+  {
+    provide: USER_REPOSITORY, // Symbol token
+    useClass: PrismaUserRepository,
+  },
+];
+
+// application/use-cases/create-user.usecase.ts
+@Injectable()
+export class CreateUserUseCase {
+  constructor(
+    @Inject(USER_REPOSITORY) // Inyectar con Symbol
+    private readonly userRepository: UserRepository
+  ) {}
+}
+```
+
+### Opción 3: Interface como Token (Avanzado)
+
+```typescript
+// interfaces/providers.ts
+export const userProviders = [
+  {
+    provide: UserRepository, // Interface como token (requiere configuración especial)
+    useClass: PrismaUserRepository,
+  },
+];
+```
+
+**Recomendación**: Usar **Symbol tokens** para mejor organización y evitar colisiones de nombres.
+
+## Organización de Providers
+
+### Por Módulo de Dominio
+
+Organizar providers por entidad o módulo de dominio:
+
+```typescript
+// interfaces/providers/user.providers.ts
+export const USER_REPOSITORY = Symbol('UserRepository');
+
+export const userProviders = [
+  {
+    provide: USER_REPOSITORY,
+    useClass: PrismaUserRepository,
+  },
+];
+
+// interfaces/providers/appointment.providers.ts
+export const APPOINTMENT_REPOSITORY = Symbol('AppointmentRepository');
+
+export const appointmentProviders = [
+  {
+    provide: APPOINTMENT_REPOSITORY,
+    useClass: PrismaAppointmentRepository,
+  },
+];
+```
+
+### Archivo Centralizado (Simple)
+
+```typescript
+// interfaces/providers.ts
+export const USER_REPOSITORY = Symbol('UserRepository');
+export const APPOINTMENT_REPOSITORY = Symbol('AppointmentRepository');
+
+export const userProviders = [ /* ... */ ];
+export const appointmentProviders = [ /* ... */ ];
+
+export const allProviders = [
+  ...userProviders,
+  ...appointmentProviders,
+];
+```
+
+## Ejemplo Completo
+
+### 1. Definir Interface en Domain
+
+```typescript
+// domain/repositories/user.repository.ts
+export interface UserRepository {
+  findById(id: string): Promise<User | null>;
+  save(user: User): Promise<void>;
+}
+```
+
+### 2. Implementar en Infrastructure
+
+```typescript
+// infrastructure/database/repositories/prisma-user.repository.ts
+import { UserRepository } from '../../../domain/repositories/user.repository';
+
+export class PrismaUserRepository implements UserRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  async findById(id: string): Promise<User | null> {
+    // Implementación con Prisma
+  }
+
+  async save(user: User): Promise<void> {
+    // Implementación con Prisma
+  }
+}
+```
+
+### 3. Usar en Use Case
+
+```typescript
+// application/use-cases/create-user.usecase.ts
+import { UserRepository } from '../../domain/repositories/user.repository';
+import { USER_REPOSITORY } from '../../interfaces/providers/user.providers';
+
+@Injectable()
+export class CreateUserUseCase {
+  constructor(
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: UserRepository
+  ) {}
+}
+```
+
+### 4. Configurar Provider
+
+```typescript
+// interfaces/providers/user.providers.ts
+import { USER_REPOSITORY } from './tokens';
+import { PrismaUserRepository } from '../../infrastructure/database/repositories/prisma-user.repository';
+
+export const userProviders = [
+  {
+    provide: USER_REPOSITORY,
+    useClass: PrismaUserRepository,
+  },
+];
+```
+
+### 5. Registrar en Módulo
+
+```typescript
+// app.module.ts
+import { userProviders } from './interfaces/providers/user.providers';
+import { CreateUserUseCase } from './application/use-cases/create-user.usecase';
+
+@Module({
+  providers: [
+    CreateUserUseCase,
+    ...userProviders,
+  ],
+})
+export class AppModule {}
+```
+
+## Inyección de Múltiples Implementaciones
+
+### Para Strategy Pattern (Notificaciones)
+
+```typescript
+// interfaces/providers/notification.providers.ts
+export const NOTIFICATION_STRATEGIES = Symbol('NotificationStrategies');
+
+export const notificationProviders = [
+  {
+    provide: NOTIFICATION_STRATEGIES,
+    useFactory: () => ({
+      email: new EmailStrategy(),
+      sms: new SMSStrategy(),
+      push: new PushStrategy(),
+    }),
+  },
+];
+```
+
+## Factories para Dependencias Complejas
+
+```typescript
+// interfaces/providers.ts
+export const userProviders = [
+  {
+    provide: USER_REPOSITORY,
+    useFactory: (prisma: PrismaClient) => {
+      return new PrismaUserRepository(prisma);
+    },
+    inject: [PrismaService], // Dependencias necesarias
+  },
+];
+```
+
+## Reglas Importantes
+
+### ✅ DO (Hacer)
+
+1. **Usar interfaces en casos de uso**: Los use cases deben depender de interfaces, no de implementaciones
+2. **Configurar providers centralmente**: Mantener la configuración de DI organizada en `interfaces/providers.ts`
+3. **Usar Symbol tokens**: Preferir Symbols sobre strings para evitar colisiones
+4. **Organizar por dominio**: Agrupar providers por módulo de dominio
+
+### ❌ DON'T (No Hacer)
+
+1. **NO inyectar implementaciones directamente en use cases**: Usar siempre interfaces
+2. **NO mezclar lógica de DI con lógica de negocio**: La configuración de DI va en `interfaces/providers.ts`
+3. **NO usar `any` en tipos de inyección**: Tipar correctamente las dependencias
+4. **NO crear dependencias circulares**: Evitar ciclos en la inyección
+
+## Checklist de DI
+
+Antes de commit:
+- ✅ ¿Los casos de uso dependen de interfaces, no de implementaciones?
+- ✅ ¿Los providers están configurados en `interfaces/providers.ts`?
+- ✅ ¿Se están usando Symbol tokens (o strings consistentes)?
+- ✅ ¿Las dependencias están correctamente inyectadas en los módulos?
+- ✅ ¿No hay dependencias circulares?

@@ -1,0 +1,248 @@
+---
+alwaysApply: false
+---
+
+# Reglas de Dependencias - Clean Architecture
+
+## Flujo de Dependencias
+
+El flujo de dependencias en Clean Architecture debe seguir esta regla:
+
+```
+interfaces → infrastructure → application → domain
+interfaces → application → domain
+interfaces → domain
+infrastructure → application → domain
+infrastructure → domain
+application → domain
+```
+
+**Traducido en reglas**:
+- `interfaces/` puede importar de TODAS las capas
+- `infrastructure/` puede importar de `domain/` y `application/`
+- `application/` puede importar SOLO de `domain/`
+- `domain/` NO puede importar de NINGUNA otra capa
+
+## Dependencias Prohibidas
+
+### ❌ Domain NO Puede Importar de Otras Capas
+
+**Esto es CRÍTICO**. `domain/` debe ser puro e independiente.
+
+**❌ MAL**:
+```typescript
+// domain/entities/user.entity.ts
+import { Injectable } from '@nestjs/common'; // ❌ NO
+import { PrismaClient } from '@prisma/client'; // ❌ NO
+import { CreateUserUseCase } from '../../application/use-cases/create-user.usecase'; // ❌ NO
+```
+
+**✅ BIEN**:
+```typescript
+// domain/entities/user.entity.ts
+// Solo imports de otros archivos del dominio
+import { Email } from '../value-objects/email.vo';
+import { Role } from '../value-objects/role.vo';
+```
+
+### ❌ Application NO Puede Importar de Infrastructure o Interfaces
+
+**❌ MAL**:
+```typescript
+// application/use-cases/create-user.usecase.ts
+import { PrismaUserRepository } from '../../infrastructure/database/repositories/prisma-user.repository'; // ❌ NO
+import { EmailStrategy } from '../../infrastructure/notifications/email.strategy'; // ❌ NO
+import { CreateUserDto } from '../../interfaces/http/dto/create-user.dto'; // ❌ NO
+```
+
+**✅ BIEN**:
+```typescript
+// application/use-cases/create-user.usecase.ts
+import { UserRepository } from '../../domain/repositories/user.repository'; // ✅ Interface
+import { NotificationStrategy } from '../../domain/services/notification-strategy.interface'; // ✅ Interface
+```
+
+### ❌ Infrastructure NO Puede Importar de Interfaces
+
+**❌ MAL**:
+```typescript
+// infrastructure/database/repositories/prisma-user.repository.ts
+import { UserController } from '../../interfaces/http/controllers/user.controller'; // ❌ NO
+```
+
+**✅ BIEN**:
+```typescript
+// infrastructure/database/repositories/prisma-user.repository.ts
+import { UserRepository } from '../../domain/repositories/user.repository'; // ✅ Interface
+import { User } from '../../domain/entities/user.entity'; // ✅ Entidad
+```
+
+## Dependencias Permitidas
+
+### ✅ Interfaces Puede Importar de Todas las Capas
+
+**✅ BIEN**:
+```typescript
+// interfaces/http/controllers/appointment.controller.ts
+import { Appointment } from '../../domain/entities/appointment.entity'; // ✅ Domain
+import { CreateAppointmentUseCase } from '../../application/use-cases/create-appointment.usecase'; // ✅ Application
+import { PrismaAppointmentRepository } from '../../infrastructure/database/repositories/prisma-appointment.repository'; // ✅ Infrastructure
+```
+
+### ✅ Infrastructure Puede Importar de Domain y Application
+
+**✅ BIEN**:
+```typescript
+// infrastructure/database/repositories/prisma-appointment.repository.ts
+import { AppointmentRepository } from '../../domain/repositories/appointment.repository'; // ✅ Domain
+import { Appointment } from '../../domain/entities/appointment.entity'; // ✅ Domain
+import { CreateAppointmentDto } from '../../application/dtos/create-appointment.dto'; // ✅ Application
+```
+
+### ✅ Application Puede Importar de Domain
+
+**✅ BIEN**:
+```typescript
+// application/use-cases/create-appointment.usecase.ts
+import { Appointment } from '../../domain/entities/appointment.entity'; // ✅ Domain
+import { AppointmentRepository } from '../../domain/repositories/appointment.repository'; // ✅ Domain
+```
+
+### ✅ Domain Solo Puede Importar de Domain
+
+**✅ BIEN**:
+```typescript
+// domain/entities/appointment.entity.ts
+import { DateTime } from '../value-objects/datetime.vo'; // ✅ Otro archivo del dominio
+import { User } from './user.entity'; // ✅ Otra entidad del dominio
+```
+
+## Ejemplos Completos
+
+### Caso de Uso (Application Layer)
+
+**✅ Correcto**:
+```typescript
+// application/use-cases/create-appointment.usecase.ts
+import { Appointment } from '../../domain/entities/appointment.entity';
+import { AppointmentRepository } from '../../domain/repositories/appointment.repository';
+import { AvailabilityRepository } from '../../domain/repositories/availability.repository';
+
+export class CreateAppointmentUseCase {
+  constructor(
+    private readonly appointmentRepository: AppointmentRepository, // Interface
+    private readonly availabilityRepository: AvailabilityRepository // Interface
+  ) {}
+}
+```
+
+**❌ Incorrecto**:
+```typescript
+// ❌ NO importar de infrastructure
+import { PrismaAppointmentRepository } from '../../infrastructure/database/repositories/prisma-appointment.repository';
+
+// ❌ NO importar de interfaces
+import { CreateAppointmentDto } from '../../interfaces/http/dto/create-appointment.dto';
+```
+
+### Repositorio (Infrastructure Layer)
+
+**✅ Correcto**:
+```typescript
+// infrastructure/database/repositories/prisma-appointment.repository.ts
+import { AppointmentRepository } from '../../domain/repositories/appointment.repository'; // Interface
+import { Appointment } from '../../domain/entities/appointment.entity'; // Entidad
+import { PrismaClient } from '@prisma/client'; // Librería externa OK
+
+export class PrismaAppointmentRepository implements AppointmentRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+}
+```
+
+**❌ Incorrecto**:
+```typescript
+// ❌ NO importar de interfaces
+import { AppointmentController } from '../../interfaces/http/controllers/appointment.controller';
+```
+
+### Controlador (Interfaces Layer)
+
+**✅ Correcto**:
+```typescript
+// interfaces/http/controllers/appointment.controller.ts
+import { Controller, Post, Body } from '@nestjs/common'; // Framework OK
+import { CreateAppointmentUseCase } from '../../application/use-cases/create-appointment.usecase'; // Application
+import { Appointment } from '../../domain/entities/appointment.entity'; // Domain
+
+@Controller('appointments')
+export class AppointmentController {
+  constructor(
+    private readonly createAppointmentUseCase: CreateAppointmentUseCase
+  ) {}
+}
+```
+
+## Violaciones Comunes
+
+### 1. Import de Framework en Domain
+
+```typescript
+// ❌ MAL
+// domain/entities/user.entity.ts
+import { Injectable } from '@nestjs/common';
+```
+
+**Solución**: Quitar el decorador. Las entidades de dominio no necesitan decoradores de NestJS.
+
+### 2. Import de Prisma en Domain
+
+```typescript
+// ❌ MAL
+// domain/entities/user.entity.ts
+import { PrismaClient } from '@prisma/client';
+```
+
+**Solución**: Usar Prisma solo en `infrastructure/database/repositories/`.
+
+### 3. Import de Implementación en Application
+
+```typescript
+// ❌ MAL
+// application/use-cases/create-user.usecase.ts
+import { PrismaUserRepository } from '../../infrastructure/database/repositories/prisma-user.repository';
+```
+
+**Solución**: Importar la interface `UserRepository` desde `domain/repositories/`.
+
+### 4. Lógica de Negocio en Infrastructure
+
+```typescript
+// ❌ MAL
+// infrastructure/database/repositories/prisma-user.repository.ts
+// Lógica de validación compleja aquí
+```
+
+**Solución**: Mover la lógica a `domain/entities/` o `application/use-cases/`.
+
+## Validación de Dependencias
+
+### Checklist Manual
+
+Antes de hacer commit, verificar cada import:
+
+1. ✅ ¿Estoy en `domain/`? → Solo puedo importar de `domain/`
+2. ✅ ¿Estoy en `application/`? → Solo puedo importar de `domain/`
+3. ✅ ¿Estoy en `infrastructure/`? → Puedo importar de `domain/` y `application/`, NO de `interfaces/`
+4. ✅ ¿Estoy en `interfaces/`? → Puedo importar de todas las capas
+
+### Herramientas Recomendadas
+
+- Usar ESLint con reglas de import prohibidas
+- Revisar manualmente los imports antes de commit
+- Validar con el linter del proyecto
+
+## Regla de Oro
+
+**"Las dependencias deben apuntar hacia adentro, hacia el dominio"**
+
+El dominio es el centro. Todo lo demás depende de él, pero el dominio no depende de nadie.

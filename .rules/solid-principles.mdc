@@ -1,0 +1,136 @@
+---
+alwaysApply: true
+---
+## Liskov Substitution Principle (LSP)
+
+### Regla
+
+Las implementaciones deben cumplir completamente los contratos de sus interfaces/interfaces base. Cualquier implementación debe poder reemplazar a su interface sin romper el comportamiento esperado.
+
+### Aplicación en el Proyecto
+
+- Si `NotificationStrategy` define `send(to: string, message: string)`, TODAS las implementaciones deben respetarlo
+- Si `UserRepository` define `findById(id: string)`, todas las implementaciones deben cumplir el contrato
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Violación del contrato
+export class EmailStrategy implements NotificationStrategy {
+  // Falta parámetro 'message', viola el contrato
+  async send(to: string): Promise<void> { /* ... */ }
+}
+```
+
+### ✅ Ejemplo Correcto
+
+```typescript
+// ✅ BIEN: Cumple el contrato completamente
+export class EmailStrategy implements NotificationStrategy {
+  async send(to: string, message: string): Promise<void> {
+    // Implementación que cumple exactamente con la interface
+  }
+}
+```
+
+---
+
+## Interface Segregation Principle (ISP)
+
+### Regla
+
+Los clientes no deben depender de interfaces que no usan. Crear interfaces específicas en lugar de interfaces generales.
+
+### Aplicación en el Proyecto
+
+- `UserRepository` tiene métodos SOLO para User
+- `AppointmentRepository` tiene métodos SOLO para Appointment
+- Evitar interfaces "God Object" con métodos para todo
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Interface "God Object" con demasiados métodos
+interface Repository {
+  findUser(id: string): User;
+  findAppointment(id: string): Appointment;
+  findAvailability(id: string): Availability;
+  saveUser(user: User): void;
+  saveAppointment(appointment: Appointment): void;
+  // ... 50 métodos más
+}
+```
+
+### ✅ Ejemplo Correcto
+
+```typescript
+// ✅ BIEN: Interfaces específicas
+interface UserRepository {
+  findById(id: string): Promise<User>;
+  save(user: User): Promise<void>;
+}
+
+interface AppointmentRepository {
+  findById(id: string): Promise<Appointment>;
+  findByProfessionalId(id: string): Promise<Appointment[]>;
+  save(appointment: Appointment): Promise<void>;
+}
+```
+
+---
+
+## Dependency Inversion Principle (DIP)
+
+### Regla
+
+Depender de abstracciones (interfaces), no de implementaciones concretas. Los módulos de alto nivel no deben depender de módulos de bajo nivel; ambos deben depender de abstracciones.
+
+### Aplicación en el Proyecto
+
+- Los casos de uso dependen de `UserRepository` (interface), NO de `PrismaUserRepository` (implementación)
+- La inyección de dependencias en `interfaces/providers.ts` conecta interfaces con implementaciones
+
+### ❌ Ejemplo Incorrecto
+
+```typescript
+// ❌ MAL: Dependencia directa de implementación
+export class CreateUserUseCase {
+  constructor(private prisma: PrismaClient) {} // Depende de Prisma directamente
+}
+```
+
+### ✅ Ejemplo Correcto
+
+```typescript
+// ✅ BIEN: Dependencia de abstracción
+
+// application/use-cases/create-user.usecase.ts
+export class CreateUserUseCase {
+  constructor(private userRepository: UserRepository) {} // Depende de interface
+}
+
+// interfaces/providers.ts (inyección de dependencias)
+{
+  provide: 'UserRepository', // Token de la interface
+  useClass: PrismaUserRepository, // Implementación concreta
+}
+```
+
+### Flujo Correcto
+
+1. **Domain** define la interface `UserRepository`
+2. **Application** usa `UserRepository` (no conoce Prisma)
+3. **Infrastructure** implementa `PrismaUserRepository`
+4. **Interfaces** configura la inyección conectando interface → implementación
+
+---
+
+## Checklist de Validación SOLID
+
+Antes de hacer commit, verificar:
+
+- ✅ ¿Cada clase tiene una sola responsabilidad?
+- ✅ ¿Se puede extender funcionalidad sin modificar código existente?
+- ✅ ¿Las implementaciones cumplen completamente sus contratos?
+- ✅ ¿Las interfaces son específicas, no "God Objects"?
+- ✅ ¿Se depende de interfaces, no de implementaciones concretas?

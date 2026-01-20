@@ -1,0 +1,89 @@
+---
+alwaysApply: true
+---
+### 📁 `src/infrastructure/` - Capa de Infraestructura (🧱 Implementaciones)
+
+**Restricciones**:
+- ✅ Puede importar de `domain/` y `application/`
+- ❌ NO puede importar de `interfaces/`
+
+**Subcarpetas permitidas**:
+
+#### `infrastructure/database/`
+- **Contenido**: Implementaciones de repositorios y ORM
+- **Subcarpetas**:
+  - `prisma/`: Configuración de Prisma (schema, client)
+  - `repositories/`: Implementaciones de repositorios
+    - **Formato**: `prisma-*.repository.ts`
+    - **Ejemplos**: `prisma-user.repository.ts`, `prisma-appointment.repository.ts`
+
+#### `infrastructure/notifications/`
+- **Contenido**: Estrategias de notificación (Strategy Pattern)
+- **Formato**: `*.strategy.ts`
+- **Ejemplos**: `email.strategy.ts`, `sms.strategy.ts`, `push.strategy.ts`
+- **También incluye**: `notification-strategy.factory.ts`
+
+#### `infrastructure/calendar/`
+- **Contenido**: Integraciones externas (Google Calendar, etc.)
+- **Formato**: `*.service.ts`
+- **Ejemplos**: `google-calendar.service.ts`
+
+---
+
+### 📁 `src/interfaces/` - Capa de Interfaz (🌐 Adaptadores HTTP)
+
+**Restricciones**:
+- ✅ Puede importar de `domain/`, `application/` e `infrastructure/`
+- **Nota**: Es la capa más externa, expone la aplicación al mundo
+
+**Subcarpetas permitidas**:
+
+#### `interfaces/http/controllers/`
+- **Contenido**: Controladores HTTP (NestJS)
+- **Formato**: `*.controller.ts`
+- **Ejemplos**: `auth.controller.ts`, `appointment.controller.ts`
+- **Regla**: Controladores deben ser DELGADOS - solo reciben requests y llaman a casos de uso
+
+#### `interfaces/http/guards/`
+- **Contenido**: Guards de autenticación/autorización
+- **Formato**: `*.guard.ts`
+- **Ejemplos**: `jwt-auth.guard.ts`
+
+#### `interfaces/http/mappers/`
+- **Contenido**: Mappers DTO ↔ Entidad de Dominio
+- **Formato**: `*.mapper.ts`
+- **Regla**: Transforman DTOs HTTP a objetos de dominio y viceversa
+
+#### `interfaces/providers.ts`
+- **Contenido**: Configuración de inyección de dependencias (NestJS)
+- **Formato**: `providers.ts` (archivo único o por módulo)
+- **Regla**: Mapea interfaces con implementaciones concretas
+
+---
+
+### 📁 `src/shared/` - Utilidades Compartidas
+
+**Contenido**:
+- Helpers, utilities, constantes
+- Funciones puras sin dependencias de frameworks
+
+**Restricciones**:
+- ❌ NO debe contener lógica de negocio
+- ❌ NO debe importar de otras capas (debe ser independiente)
+
+---
+
+## Verificación de Ubicación
+
+Antes de crear cualquier archivo nuevo, seguir estos pasos:
+
+1. **Identificar la capa**: ¿Qué responsabilidad tiene el archivo?
+2. **Consultar `folder_structure.md`**: Verificar la ubicación exacta
+3. **Verificar dependencias**: ¿De qué puede importar según su capa?
+4. **Validar formato**: ¿El nombre sigue las convenciones de nomenclatura?
+
+## Prohibiciones Estrictas
+
+- ❌ NO crear archivos fuera de estas carpetas
+- ❌ NO mezclar responsabilidades de diferentes capas
+- ❌ NO importar desde capas incorrectas (ver `dependencies.mdc`)
