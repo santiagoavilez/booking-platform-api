@@ -1,63 +1,74 @@
 # Booking Platform API
 
-Backend API para la plataforma de reserva de citas, desarrollado con NestJS.
+Backend API for the appointment booking platform, built with NestJS.
 
-## Descripción
+## Description
 
-API RESTful que permite gestionar usuarios, profesionales, disponibilidades y reservas de citas, con integración de notificaciones y Google Calendar.
+RESTful API for managing users, professionals, availability, and appointment bookings, with notifications and Google Calendar integration.
 
-## Stack Tecnológico
+## Tech Stack
 
 - **Framework**: NestJS
-- **Lenguaje**: TypeScript
-- **Arquitectura**: Clean Architecture
-- **Base de datos**: PostgreSQL (MVP)
-- **Autenticación**: JWT
+- **Language**: TypeScript
+- **Architecture**: Clean Architecture
+- **Database**: PostgreSQL (MVP)
+- **ORM**: Drizzle
+- **Authentication**: JWT
 
-## Estructura del Proyecto
+## Technical Decisions
+
+### Drizzle vs Prisma
+
+**Drizzle** was chosen over Prisma as the ORM for the following reasons:
+
+- **SQL-like syntax**: Drizzle exposes an API very close to standard SQL, making it easier to write complex queries and leverage existing SQL knowledge.
+- **Better performance**: Lower runtime overhead and more efficient queries compared to alternatives like Prisma.
+- **Lighter weight**: Fewer dependencies and a smaller bundle, resulting in faster builds and lower resource usage.
+
+## Project Structure
 
 ```
 src/
-├── domain/           # Capa de dominio (framework-agnostic)
-│   ├── entities/     # Entidades del dominio
-│   ├── enums/        # Enumeraciones del dominio
-│   └── services/     # Interfaces de servicios
-├── application/      # Casos de uso
-├── infrastructure/   # Implementaciones concretas
-└── interfaces/       # Adaptadores HTTP (controllers)
+├── domain/           # Domain layer (framework-agnostic)
+│   ├── entities/     # Domain entities
+│   ├── enums/        # Domain enums
+│   └── services/     # Service interfaces
+├── application/      # Use cases
+├── infrastructure/   # Concrete implementations
+└── interfaces/       # HTTP adapters (controllers)
 ```
 
-## Instalación
+## Installation
 
 ```bash
 npm install
-# o
+# or
 pnpm install
 ```
 
 ## Scripts
 
 ```bash
-# Desarrollo
-npm run start:dev
+# Development
+pnpm run start:dev
 
 # Build
-npm run build
+pnpm run build
 
-# Producción
-npm run start:prod
+# Production
+pnpm run start:prod
 
 # Tests
-npm run test
-npm run test:e2e
+pnpm run test
+pnpm run test:e2e
 
 # Linting
-npm run lint
+pnpm run lint
 ```
 
-## Configuración
+## Configuration
 
-Crea un archivo `.env` en la raíz del proyecto con las variables de entorno necesarias:
+Create a `.env` file in the project root with the required environment variables:
 
 ```env
 PORT=3000
@@ -65,6 +76,6 @@ DATABASE_URL=postgresql://...
 JWT_SECRET=...
 ```
 
-## Desarrollo
+## Development
 
-El proyecto sigue Clean Architecture para mantener el dominio independiente de frameworks y servicios externos.
+The project follows Clean Architecture to keep the domain independent of frameworks and external services.

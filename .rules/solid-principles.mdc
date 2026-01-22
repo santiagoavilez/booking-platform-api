@@ -3,32 +3,32 @@ alwaysApply: true
 ---
 ## Liskov Substitution Principle (LSP)
 
-### Regla
+### Rule
 
-Las implementaciones deben cumplir completamente los contratos de sus interfaces/interfaces base. Cualquier implementación debe poder reemplazar a su interface sin romper el comportamiento esperado.
+Implementations must completely fulfill the contracts of their interfaces/base interfaces. Any implementation must be able to replace its interface without breaking expected behavior.
 
-### Aplicación en el Proyecto
+### Application in Project
 
-- Si `NotificationStrategy` define `send(to: string, message: string)`, TODAS las implementaciones deben respetarlo
-- Si `UserRepository` define `findById(id: string)`, todas las implementaciones deben cumplir el contrato
+- If `NotificationStrategy` defines `send(to: string, message: string)`, ALL implementations must respect it
+- If `UserRepository` defines `findById(id: string)`, all implementations must fulfill the contract
 
-### ❌ Ejemplo Incorrecto
+### ❌ Incorrect Example
 
 ```typescript
-// ❌ MAL: Violación del contrato
+// ❌ BAD: Contract violation
 export class EmailStrategy implements NotificationStrategy {
-  // Falta parámetro 'message', viola el contrato
+  // Missing 'message' parameter, violates contract
   async send(to: string): Promise<void> { /* ... */ }
 }
 ```
 
-### ✅ Ejemplo Correcto
+### ✅ Correct Example
 
 ```typescript
-// ✅ BIEN: Cumple el contrato completamente
+// ✅ GOOD: Completely fulfills contract
 export class EmailStrategy implements NotificationStrategy {
   async send(to: string, message: string): Promise<void> {
-    // Implementación que cumple exactamente con la interface
+    // Implementation that fulfills exactly with the interface
   }
 }
 ```
@@ -37,34 +37,34 @@ export class EmailStrategy implements NotificationStrategy {
 
 ## Interface Segregation Principle (ISP)
 
-### Regla
+### Rule
 
-Los clientes no deben depender de interfaces que no usan. Crear interfaces específicas en lugar de interfaces generales.
+Clients should not depend on interfaces they don't use. Create specific interfaces instead of general ones.
 
-### Aplicación en el Proyecto
+### Application in Project
 
-- `UserRepository` tiene métodos SOLO para User
-- `AppointmentRepository` tiene métodos SOLO para Appointment
-- Evitar interfaces "God Object" con métodos para todo
+- `UserRepository` has methods ONLY for User
+- `AppointmentRepository` has methods ONLY for Appointment
+- Avoid "God Object" interfaces with methods for everything
 
-### ❌ Ejemplo Incorrecto
+### ❌ Incorrect Example
 
 ```typescript
-// ❌ MAL: Interface "God Object" con demasiados métodos
+// ❌ BAD: "God Object" interface with too many methods
 interface Repository {
   findUser(id: string): User;
   findAppointment(id: string): Appointment;
   findAvailability(id: string): Availability;
   saveUser(user: User): void;
   saveAppointment(appointment: Appointment): void;
-  // ... 50 métodos más
+  // ... 50 more methods
 }
 ```
 
-### ✅ Ejemplo Correcto
+### ✅ Correct Example
 
 ```typescript
-// ✅ BIEN: Interfaces específicas
+// ✅ GOOD: Specific interfaces
 interface UserRepository {
   findById(id: string): Promise<User>;
   save(user: User): Promise<void>;
@@ -81,56 +81,56 @@ interface AppointmentRepository {
 
 ## Dependency Inversion Principle (DIP)
 
-### Regla
+### Rule
 
-Depender de abstracciones (interfaces), no de implementaciones concretas. Los módulos de alto nivel no deben depender de módulos de bajo nivel; ambos deben depender de abstracciones.
+Depend on abstractions (interfaces), not on concrete implementations. High-level modules should not depend on low-level modules; both should depend on abstractions.
 
-### Aplicación en el Proyecto
+### Application in Project
 
-- Los casos de uso dependen de `UserRepository` (interface), NO de `PrismaUserRepository` (implementación)
-- La inyección de dependencias en `interfaces/providers.ts` conecta interfaces con implementaciones
+- Use cases depend on `UserRepository` (interface), NOT on `DrizzleUserRepository` (implementation)
+- Dependency injection in `interfaces/providers.ts` connects interfaces with implementations
 
-### ❌ Ejemplo Incorrecto
+### ❌ Incorrect Example
 
 ```typescript
-// ❌ MAL: Dependencia directa de implementación
+// ❌ BAD: Direct dependency on implementation
 export class CreateUserUseCase {
-  constructor(private prisma: PrismaClient) {} // Depende de Prisma directamente
+  constructor(private db: ReturnType<typeof drizzle>) {} // Depends on Drizzle directly
 }
 ```
 
-### ✅ Ejemplo Correcto
+### ✅ Correct Example
 
 ```typescript
-// ✅ BIEN: Dependencia de abstracción
+// ✅ GOOD: Dependency on abstraction
 
 // application/use-cases/create-user.usecase.ts
 export class CreateUserUseCase {
-  constructor(private userRepository: UserRepository) {} // Depende de interface
+  constructor(private userRepository: UserRepository) {} // Depends on interface
 }
 
-// interfaces/providers.ts (inyección de dependencias)
+// interfaces/providers.ts (dependency injection)
 {
-  provide: 'UserRepository', // Token de la interface
-  useClass: PrismaUserRepository, // Implementación concreta
+  provide: 'UserRepository', // Interface token
+  useClass: DrizzleUserRepository, // Concrete implementation
 }
 ```
 
-### Flujo Correcto
+### Correct Flow
 
-1. **Domain** define la interface `UserRepository`
-2. **Application** usa `UserRepository` (no conoce Prisma)
-3. **Infrastructure** implementa `PrismaUserRepository`
-4. **Interfaces** configura la inyección conectando interface → implementación
+1. **Domain** defines the `UserRepository` interface
+2. **Application** uses `UserRepository` (doesn't know Drizzle)
+3. **Infrastructure** implements `DrizzleUserRepository`
+4. **Interfaces** configures injection connecting interface → implementation
 
 ---
 
-## Checklist de Validación SOLID
+## SOLID Validation Checklist
 
-Antes de hacer commit, verificar:
+Before committing, verify:
 
-- ✅ ¿Cada clase tiene una sola responsabilidad?
-- ✅ ¿Se puede extender funcionalidad sin modificar código existente?
-- ✅ ¿Las implementaciones cumplen completamente sus contratos?
-- ✅ ¿Las interfaces son específicas, no "God Objects"?
-- ✅ ¿Se depende de interfaces, no de implementaciones concretas?
+- ✅ Does each class have a single responsibility?
+- ✅ Can functionality be extended without modifying existing code?
+- ✅ Do implementations completely fulfill their contracts?
+- ✅ Are interfaces specific, not "God Objects"?
+- ✅ Do we depend on interfaces, not concrete implementations?

@@ -36,10 +36,16 @@ booking-api/
 │   │
 │   ├── infrastructure/             # 🧱 Implementaciones
 │   │   ├── database/
-│   │   │   ├── prisma/
+│   │   │   ├── drizzle/
+│   │   │   │   ├── schema.ts
+│   │   │   │   └── index.ts
 │   │   │   └── repositories/
-│   │   │       ├── prisma-user.repository.ts
-│   │   │       └── prisma-appointment.repository.ts
+│   │   │       ├── drizzle-user.repository.ts
+│   │   │       └── drizzle-appointment.repository.ts
+│   │   │
+│   │   ├── services/
+│   │   │   ├── bcrypt-password-hasher.ts
+│   │   │   └── uuid-id-generator.ts
 │   │   │
 │   │   ├── notifications/
 │   │   │   ├── email.strategy.ts
@@ -67,7 +73,7 @@ booking-api/
 │   └── shared/                     # helpers internos
 │
 ├── test/
-├── prisma/
+├── drizzle/
 ├── package.json
 ├── tsconfig.json
 └── README.md

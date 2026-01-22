@@ -2,135 +2,135 @@
 alwaysApply: true
 ---
 
-# Enfoque del Proyecto - Challenge Técnico
+# Project Approach - Technical Challenge
 
-## Contexto del Proyecto
+## Project Context
 
-Este proyecto es un **challenge técnico de un curso**. Por lo tanto:
+This project is a **technical challenge for a course**. Therefore:
 
-- ✅ **El aprendizaje y comprensión son prioritarios**
-- ✅ **Cada decisión arquitectónica debe ser entendida**
-- ✅ **La documentación es esencial para el aprendizaje**
+- ✅ **Learning and understanding are priorities**
+- ✅ **Every architectural decision must be understood**
+- ✅ **Documentation is essential for learning**
 
-## Regla Fundamental: Entender Todo
+## Fundamental Rule: Understand Everything
 
-### Cada Decisión Debe Ser Comprensible
+### Every Decision Must Be Understandable
 
-**ANTES de implementar cualquier cambio significativo**:
+**BEFORE implementing any significant change**:
 
-1. **Explicar el "por qué"**: ¿Por qué se toma esta decisión arquitectónica?
-2. **Documentar brevemente**: ¿Qué problema resuelve? ¿Qué alternativas se consideraron?
-3. **Asegurar comprensión**: ¿El estudiante puede entender y explicar la decisión?
+1. **Explain the "why"**: Why is this architectural decision made?
+2. **Document briefly**: What problem does it solve? What alternatives were considered?
+3. **Ensure understanding**: Can the student understand and explain the decision?
 
-### Documentación de Decisiones
+### Decision Documentation
 
-Cada decisión técnica importante debe documentarse de forma breve y precisa:
+Each important technical decision must be documented briefly and precisely:
 
-- **Decisión**: ¿Qué se decidió?
-- **Razón**: ¿Por qué se decidió así?
-- **Alternativas**: ¿Qué otras opciones se consideraron?
+- **Decision**: What was decided?
+- **Reason**: Why was it decided this way?
+- **Alternatives**: What other options were considered?
 
-**Ejemplo de documentación**:
+**Documentation example**:
 ```typescript
 /**
- * Decisión: Usar Strategy Pattern para notificaciones
- * Razón: Permite agregar nuevos canales (SMS, Push) sin modificar código existente (OCP)
- * Alternativas consideradas: Factory Pattern, pero Strategy es más flexible para este caso
+ * Decision: Use Strategy Pattern for notifications
+ * Reason: Allows adding new channels (SMS, Push) without modifying existing code (OCP)
+ * Alternatives considered: Factory Pattern, but Strategy is more flexible for this case
  */
 export interface NotificationStrategy { }
 ```
 
-## Uso del Modo Agente
+## Agent Mode Usage
 
-### ❌ NO Abusar del Modo Agente
+### ❌ DO NOT Abuse Agent Mode
 
-**Reglas estrictas**:
+**Strict rules**:
 
-1. **NO usar modo agente para tareas simples** que se pueden hacer manualmente
-2. **NO crear múltiples archivos/directorios** antes de entender qué se está haciendo
-3. **NO ejecutar modo agente** sin antes haber planeado y entendido el alcance
+1. **DO NOT use agent mode for simple tasks** that can be done manually
+2. **DO NOT create multiple files/directories** before understanding what is being done
+3. **DO NOT execute agent mode** without first planning and understanding the scope
 
-### ✅ Cuándo Usar Modo Agente
+### ✅ When to Use Agent Mode
 
-Solo usar modo agente cuando:
-- ✅ Es una tarea **compleja y bien definida** que requiere múltiples pasos coordinados
-- ✅ **Ya se entiende** qué se va a implementar y por qué
-- ✅ Se ha **revisado y aprobado** el plan antes de ejecutar
+Only use agent mode when:
+- ✅ It's a **complex and well-defined task** that requires multiple coordinated steps
+- ✅ **Already understand** what will be implemented and why
+- ✅ The plan has been **reviewed and approved** before executing
 
-### ⚠️ Antes de Ejecutar Modo Agente
+### ⚠️ Before Executing Agent Mode
 
-**Checklist obligatorio**:
+**Mandatory checklist**:
 
-- [ ] ¿Entiendo completamente qué se va a crear/modificar?
-- [ ] ¿He revisado el plan paso a paso?
-- [ ] ¿Es realmente necesario crear múltiples archivos de una vez?
-- [ ] ¿Puedo hacer esto manualmente y aprender en el proceso?
+- [ ] Do I completely understand what will be created/modified?
+- [ ] Have I reviewed the plan step by step?
+- [ ] Is it really necessary to create multiple files at once?
+- [ ] Can I do this manually and learn in the process?
 
-**Regla de oro**: Si puedes hacerlo manualmente y entender cada paso, **hazlo manualmente**.
+**Golden rule**: If you can do it manually and understand each step, **do it manually**.
 
-### 🚫 Restricciones de Modo Agente
+### 🚫 Agent Mode Restrictions
 
-**NO ejecutar modo agente si**:
+**DO NOT execute agent mode if**:
 
-- ❌ Se van a crear **más de 3-5 archivos nuevos** sin revisión previa
-- ❌ Se van a crear **múltiples directorios** sin entender la estructura
-- ❌ La tarea es **simple** (1-2 archivos, cambios menores)
-- ❌ **No hay claridad** sobre qué se está implementando
+- ❌ **More than 3-5 new files** will be created without prior review
+- ❌ **Multiple directories** will be created without understanding the structure
+- ❌ The task is **simple** (1-2 files, minor changes)
+- ❌ **No clarity** on what is being implemented
 
-### ✅ Proceso Recomendado
+### ✅ Recommended Process
 
-1. **Planificar primero**: Definir qué archivos y dónde
-2. **Revisar**: Verificar que el plan sigue las reglas (folder-structure, dependencies, etc.)
-3. **Crear incrementalmente**: Si es necesario crear muchos archivos, hacerlo en pequeños pasos
-4. **Documentar**: Explicar cada decisión importante
+1. **Plan first**: Define what files and where
+2. **Review**: Verify that the plan follows the rules (folder-structure, dependencies, etc.)
+3. **Create incrementally**: If it's necessary to create many files, do it in small steps
+4. **Document**: Explain each important decision
 
-## Filosofía de Aprendizaje
+## Learning Philosophy
 
-### Pequeños Pasos, Mucha Comprensión
+### Small Steps, Much Understanding
 
-**Mejor**:
-- ✅ Crear 1-2 archivos, entenderlos, luego continuar
-- ✅ Implementar feature por feature, no todo de una vez
-- ✅ Revisar código generado antes de continuar
+**Better**:
+- ✅ Create 1-2 files, understand them, then continue
+- ✅ Implement feature by feature, not everything at once
+- ✅ Review generated code before continuing
 
-**Peor**:
-- ❌ Crear 10+ archivos sin revisar
-- ❌ Implementar múltiples features simultáneamente
-- ❌ Avanzar sin entender lo que se hizo
+**Worse**:
+- ❌ Create 10+ files without reviewing
+- ❌ Implement multiple features simultaneously
+- ❌ Advance without understanding what was done
 
-### Documentación Continua
+### Continuous Documentation
 
-**Mientras se implementa**:
+**While implementing**:
 
-- Documentar decisiones en comentarios JSDoc
-- Explicar "por qué" en commits
-- Revisar y entender cada archivo antes de crear el siguiente
+- Document decisions in JSDoc comments
+- Explain "why" in commits
+- Review and understand each file before creating the next one
 
-## Ejemplos de Buenas Prácticas
+## Good Practice Examples
 
-### ✅ BIEN: Implementación Incremental
-
-```
-Paso 1: Crear entidad User (1 archivo)
-  → Revisar y entender
-  → Verificar que sigue las reglas
-
-Paso 2: Crear UserRepository interface (1 archivo)
-  → Revisar y entender
-  → Verificar dependencias
-
-Paso 3: Crear caso de uso CreateUser (1 archivo)
-  → Revisar y entender
-  → Verificar que usa la interface, no implementación
-
-Paso 4: Crear implementación PrismaUserRepository (1 archivo)
-  → Revisar y entender
-```
-
-### ❌ MAL: Creación Masiva
+### ✅ GOOD: Incremental Implementation
 
 ```
-❌ Modo agente crea:
+Step 1: Create User entity (1 file)
+  → Review and understand
+  → Verify it follows the rules
+
+Step 2: Create UserRepository interface (1 file)
+  → Review and understand
+  → Verify dependencies
+
+Step 3: Create CreateUser use case (1 file)
+  → Review and understand
+  → Verify it uses the interface, not implementation
+
+Step 4: Create DrizzleUserRepository implementation (1 file)
+  → Review and understand
+```
+
+### ❌ BAD: Massive Creation
+
+```
+❌ Agent mode creates:
   - user.entity.ts
   - professional.entity.ts
   - appointment.entity.ts
@@ -141,42 +141,42 @@ Paso 4: Crear implementación PrismaUserRepository (1 archivo)
   - create-user.usecase.ts
   - create-professional.usecase.ts
   - create-appointment.usecase.ts
-  - ... 10+ archivos más
+  - ... 10+ more files
 
-Sin revisar ni entender cada uno antes de continuar
+Without reviewing or understanding each one before continuing
 ```
 
-## Prioridad: Comprensión sobre Velocidad
+## Priority: Understanding over Speed
 
-**En este proyecto**:
-- 🎓 **Aprender** es más importante que **terminar rápido**
-- 📚 **Entender** cada decisión es más valioso que **implementar todo**
-- 🔍 **Revisar** y **comprender** antes de avanzar
+**In this project**:
+- 🎓 **Learning** is more important than **finishing quickly**
+- 📚 **Understanding** each decision is more valuable than **implementing everything**
+- 🔍 **Review** and **understand** before advancing
 
-## Checklist Antes de Crear Archivos
+## Checklist Before Creating Files
 
-Antes de crear/modificar cualquier archivo, preguntarse:
+Before creating/modifying any file, ask yourself:
 
-- [ ] ¿Entiendo completamente qué voy a crear?
-- [ ] ¿Sé por qué este archivo va en esta ubicación?
-- [ ] ¿Entiendo las dependencias que va a tener?
-- [ ] ¿Puedo explicar la decisión arquitectónica?
-- [ ] ¿He revisado las reglas relevantes (folder-structure, dependencies, etc.)?
+- [ ] Do I completely understand what I'm going to create?
+- [ ] Do I know why this file goes in this location?
+- [ ] Do I understand the dependencies it will have?
+- [ ] Can I explain the architectural decision?
+- [ ] Have I reviewed the relevant rules (folder-structure, dependencies, etc.)?
 
-Si alguna respuesta es **NO**, detenerse y aclarar antes de continuar.
+If any answer is **NO**, stop and clarify before continuing.
 
-## Documentación de Decisiones Técnicas
+## Technical Decision Documentation
 
-### Formato Sugerido para Documentar
+### Suggested Format for Documentation
 
-En comentarios JSDoc o en el código:
+In JSDoc comments or in code:
 
 ```typescript
 /**
- * DECISIÓN ARQUITECTÓNICA:
- * - Qué: Uso de Value Object Email para validación
- * - Por qué: Centraliza validación de email y evita duplicación
- * - Alternativas: Validación en DTOs, pero Value Object es más reutilizable
+ * ARCHITECTURAL DECISION:
+ * - What: Use Email Value Object for validation
+ * - Why: Centralizes email validation and avoids duplication
+ * - Alternatives: Validation in DTOs, but Value Object is more reusable
  */
 export class Email {
   constructor(private readonly value: string) {
@@ -187,12 +187,12 @@ export class Email {
 }
 ```
 
-## Resumen
+## Summary
 
-1. **Este es un proyecto de aprendizaje** - La comprensión es clave
-2. **Documentar decisiones** - Cada decisión importante debe tener su "por qué"
-3. **No abusar del modo agente** - Usar solo cuando es realmente necesario
-4. **Incremental y comprensible** - Pasos pequeños, mucha revisión
-5. **Antes de crear muchos archivos** - Planificar, revisar, entender
+1. **This is a learning project** - Understanding is key
+2. **Document decisions** - Each important decision must have its "why"
+3. **Do not abuse agent mode** - Use only when really necessary
+4. **Incremental and understandable** - Small steps, much review
+5. **Before creating many files** - Plan, review, understand
 
-**Regla de oro**: Si no puedes explicar por qué algo se implementa de cierta forma, no estás listo para implementarlo.
+**Golden rule**: If you cannot explain why something is implemented in a certain way, you are not ready to implement it.

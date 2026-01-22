@@ -1,105 +1,105 @@
 ---
 alwaysApply: true
 ---
-### 3. Principios SOLID
+### 3. SOLID Principles
 
-- [ ] ¿Cada clase tiene una sola responsabilidad (SRP)?
-- [ ] ¿Se puede extender sin modificar (OCP)?
-- [ ] ¿Las implementaciones cumplen sus contratos (LSP)?
-- [ ] ¿Las interfaces son específicas, no "God Objects" (ISP)?
-- [ ] ¿Se depende de interfaces, no de implementaciones (DIP)?
+- [ ] Does each class have a single responsibility (SRP)?
+- [ ] Can it be extended without modifying (OCP)?
+- [ ] Do implementations fulfill their contracts (LSP)?
+- [ ] Are interfaces specific, not "God Objects" (ISP)?
+- [ ] Do we depend on interfaces, not implementations (DIP)?
 
-**Verificar**: Consultar `.rules/solid-principles.mdc`
-
----
-
-### 4. Principio KISS
-
-- [ ] ¿Es la solución más simple que funciona?
-- [ ] ¿No hay over-engineering innecesario?
-- [ ] ¿No hay abstracciones "por si acaso"?
-
-**Verificar**: Consultar `.rules/kiss-principle.mdc`
+**Verify**: Consult `.rules/solid-principles.mdc`
 
 ---
 
-### 5. Convenciones de Código
+### 4. KISS Principle
 
-- [ ] ¿Los nombres de archivos siguen las convenciones (`*.entity.ts`, `*-usecase.ts`, etc.)?
-- [ ] ¿Los nombres de clases siguen PascalCase?
-- [ ] ¿Las variables y funciones siguen camelCase?
-- [ ] ¿Están tipados todos los parámetros (no `any`)?
-- [ ] ¿El código está formateado con Prettier?
+- [ ] Is it the simplest solution that works?
+- [ ] Is there no unnecessary over-engineering?
+- [ ] Are there no abstractions "just in case"?
 
-**Verificar**: Consultar `.rules/code-conventions.mdc`
+**Verify**: Consult `.rules/kiss-principle.mdc`
 
 ---
 
-### 6. Alcance del MVP
+### 5. Code Conventions
 
-- [ ] ¿La feature está dentro del alcance del MVP?
-- [ ] ¿Se consultó `proyect_requirements.md` antes de agregar?
-- [ ] ¿No se agregaron features de la lista "Explícitamente Fuera"?
+- [ ] Do file names follow conventions (`*.entity.ts`, `*-usecase.ts`, etc.)?
+- [ ] Do class names follow PascalCase?
+- [ ] Do variables and functions follow camelCase?
+- [ ] Are all parameters typed (no `any`)?
+- [ ] Is code formatted with Prettier?
 
-**Features explícitamente fuera**:
-- ❌ Pagos
-- ❌ Cancelación o reprogramación de citas
-- ❌ Recordatorios automáticos previos
-- ❌ Chats entre usuarios
-- ❌ Panel administrativo
-- ❌ Manejo avanzado de calendarios
-- ❌ Multimoneda o internacionalización
-
-**Verificar**: Consultar `proyect_requirements.md` y `.rules/roadmap.mdc`
+**Verify**: Consult `.rules/code-conventions.mdc`
 
 ---
 
-### 7. Inyección de Dependencias
+### 6. MVP Scope
 
-- [ ] ¿Los casos de uso dependen de interfaces, no de implementaciones?
-- [ ] ¿Los providers están configurados en `interfaces/providers.ts`?
-- [ ] ¿No hay dependencias circulares?
+- [ ] Is the feature within MVP scope?
+- [ ] Was `proyect_requirements.md` consulted before adding?
+- [ ] Were no features from the "Explicitly Out" list added?
 
-**Verificar**: Consultar `.rules/dependency-injection.mdc`
+**Features explicitly out**:
+- ❌ Payments
+- ❌ Appointment cancellation or rescheduling
+- ❌ Automatic prior reminders
+- ❌ Chats between users
+- ❌ Admin panel
+- ❌ Advanced calendar handling
+- ❌ Multi-currency or internationalization
 
----
-
-### 8. Anti-Patrones
-
-- [ ] ¿No hay "God Objects"?
-- [ ] ¿Las entidades tienen lógica de negocio (no son anémicas)?
-- [ ] ¿No hay dependencias circulares?
-- [ ] ¿No hay magic numbers/strings?
-- [ ] ¿No hay optimización prematura?
-
-**Verificar**: Consultar `.rules/anti-patterns.mdc`
+**Verify**: Consult `proyect_requirements.md` and `.rules/roadmap.mdc`
 
 ---
 
-### 9. Testing (Opcional pero Recomendado)
+### 7. Dependency Injection
 
-- [ ] ¿Hay tests para la lógica nueva?
-- [ ] ¿Los tests son claros y descriptivos?
-- [ ] ¿Los tests siguen la estructura AAA (Arrange-Act-Assert)?
+- [ ] Do use cases depend on interfaces, not implementations?
+- [ ] Are providers configured in `interfaces/providers.ts`?
+- [ ] Are there no circular dependencies?
 
-**Verificar**: Consultar `.rules/testing.mdc`
-
----
-
-### 10. Clean Architecture - Verificación General
-
-- [ ] ¿El dominio está libre de frameworks?
-- [ ] ¿Los casos de uso orquestan sin depender de infraestructura directamente?
-- [ ] ¿Los controladores son delgados (solo llaman a casos de uso)?
-- [ ] ¿Las dependencias siguen el flujo correcto?
-
-**Verificar**: Consultar `.rules/clean-architecture.mdc`
+**Verify**: Consult `.rules/dependency-injection.mdc`
 
 ---
 
-## Comandos Útiles Antes de Commit
+### 8. Anti-Patterns
 
-### Formatear Código
+- [ ] No "God Objects"?
+- [ ] Do entities have business logic (not anemic)?
+- [ ] No circular dependencies?
+- [ ] No magic numbers/strings?
+- [ ] No premature optimization?
+
+**Verify**: Consult `.rules/anti-patterns.mdc`
+
+---
+
+### 9. Testing (Optional but Recommended)
+
+- [ ] Are there tests for the new logic?
+- [ ] Are tests clear and descriptive?
+- [ ] Do tests follow the AAA structure (Arrange-Act-Assert)?
+
+**Verify**: Consult `.rules/testing.mdc`
+
+---
+
+### 10. Clean Architecture - General Verification
+
+- [ ] Is domain free of frameworks?
+- [ ] Do use cases orchestrate without directly depending on infrastructure?
+- [ ] Are controllers thin (only call use cases)?
+- [ ] Do dependencies follow the correct flow?
+
+**Verify**: Consult `.rules/clean-architecture.mdc`
+
+---
+
+## Useful Commands Before Commit
+
+### Format Code
 ```bash
 npm run format
 ```
@@ -114,55 +114,55 @@ npm run lint
 npm test
 ```
 
-### Build (Verificar que compila)
+### Build (Verify it compiles)
 ```bash
 npm run build
 ```
 
 ---
 
-## Si Algo Falla en el Checklist
+## If Something Fails in the Checklist
 
-### NO Hacer Commit Hasta:
-1. Corregir las violaciones
-2. Verificar que el código compila
-3. Ejecutar tests (si existen)
-4. Pasar el checklist completo
+### DO NOT Commit Until:
+1. Fix violations
+2. Verify code compiles
+3. Run tests (if they exist)
+4. Pass the complete checklist
 
-### Prioridades de Corrección:
+### Correction Priorities:
 
-1. **CRÍTICO** (bloquea commit):
-   - Violaciones de dependencias (domain importando de otras capas)
-   - Features fuera del MVP
-   - Estructura de carpetas incorrecta
+1. **CRITICAL** (blocks commit):
+   - Dependency violations (domain importing from other layers)
+   - Features outside MVP
+   - Incorrect folder structure
 
-2. **IMPORTANTE** (corregir antes de merge):
-   - Violaciones de SOLID
-   - Anti-patrones
-   - Convenciones de código
+2. **IMPORTANT** (fix before merge):
+   - SOLID violations
+   - Anti-patterns
+   - Code conventions
 
-3. **RECOMENDADO** (mejorar en siguiente iteración):
-   - Tests faltantes
-   - Mejoras de legibilidad
-   - Optimizaciones menores
-
----
-
-## Notas Finales
-
-- **Mejor commit pequeño y correcto que grande y problemático**
-- **Las reglas están para mantener la calidad y arquitectura**
-- **Si tienes dudas, consultar los archivos `.rules/*.mdc` correspondientes**
+3. **RECOMMENDED** (improve in next iteration):
+   - Missing tests
+   - Readability improvements
+   - Minor optimizations
 
 ---
 
-## Checklist Rápido (Versión Resumida)
+## Final Notes
 
-Para commits pequeños/urgentes, verificar al menos:
+- **Better a small and correct commit than a large and problematic one**
+- **Rules are to maintain quality and architecture**
+- **If you have doubts, consult the corresponding `.rules/*.mdc` files**
 
-- [ ] ¿Dependencias correctas? (domain no importa de otras capas)
-- [ ] ¿Archivo en carpeta correcta?
-- [ ] ¿Feature dentro del MVP?
-- [ ] ¿Código formateado y sin errores de compilación?
+---
 
-Si todas son ✅, se puede proceder con commit. Luego, en revisión, verificar el checklist completo.
+## Quick Checklist (Summary Version)
+
+For small/urgent commits, verify at least:
+
+- [ ] Correct dependencies? (domain does not import from other layers)
+- [ ] File in correct folder?
+- [ ] Feature within MVP?
+- [ ] Code formatted and no compilation errors?
+
+If all are ✅, you can proceed with commit. Then, in review, verify the complete checklist.

@@ -1,22 +1,22 @@
 ---
 alwaysApply: true
 ---
-# Clean Architecture - Principios Fundamentales
+# Clean Architecture - Fundamental Principles
 
-## Definición
+## Definition
 
-Clean Architecture organiza el código en capas concéntricas donde:
-- **Las capas internas NO dependen de las externas**
-- **La capa más externa depende de todas las internas**
+Clean Architecture organizes code in concentric layers where:
+- **Inner layers do NOT depend on outer layers**
+- **The outermost layer depends on all inner layers**
 
-## Capas del Proyecto (de interno a externo)
+## Project Layers (from inner to outer)
 
-1. **Domain** (más interno) - Lógica de negocio pura
-2. **Application** - Casos de uso y orquestación
-3. **Infrastructure** - Implementaciones técnicas (DB, servicios externos)
-4. **Interfaces** (más externo) - Adaptadores (HTTP, CLI, etc.)
+1. **Domain** (innermost) - Pure business logic
+2. **Application** - Use cases and orchestration
+3. **Infrastructure** - Technical implementations (DB, external services)
+4. **Interfaces** (outermost) - Adapters (HTTP, CLI, etc.)
 
-## Regla de Dependencias
+## Dependency Rule
 
 ```
 interfaces → infrastructure → application → domain
@@ -24,29 +24,29 @@ interfaces → application → domain
 infrastructure → domain
 ```
 
-**Traducido**:
-- `interfaces/` puede importar de todas las capas
-- `infrastructure/` puede importar de `domain/` y `application/`
-- `application/` puede importar de `domain/`
-- `domain/` NO puede importar de NINGUNA otra capa
+**Translated**:
+- `interfaces/` can import from all layers
+- `infrastructure/` can import from `domain/` and `application/`
+- `application/` can import from `domain/`
+- `domain/` CANNOT import from ANY other layer
 
-## Reglas por Capa
+## Rules by Layer
 
 ### Domain Layer
 
-**¿Qué contiene?**
-- Entidades con lógica de negocio
+**What does it contain?**
+- Entities with business logic
 - Value Objects
-- Interfaces de repositorios y servicios
-- Reglas de negocio puras
+- Repository and service interfaces
+- Pure business rules
 
-**¿Qué NO contiene?**
+**What does it NOT contain?**
 - Frameworks (NestJS, Express, etc.)
-- Librerías de base de datos (Prisma, TypeORM, etc.)
-- Servicios externos (Email, SMS, etc.)
-- Dependencias de infraestructura
+- Database libraries (Drizzle ORM, TypeORM, etc.)
+- External services (Email, SMS, etc.)
+- Infrastructure dependencies
 
-**Ejemplo correcto**:
+**Correct example**:
 ```typescript
 // domain/entities/appointment.entity.ts
 export class Appointment {
@@ -57,7 +57,7 @@ export class Appointment {
     private readonly dateTime: DateTime
   ) {}
 
-  // Lógica de negocio pura
+  // Pure business logic
   isInThePast(): boolean {
     return this.dateTime.isBefore(DateTime.now());
   }
@@ -66,17 +66,17 @@ export class Appointment {
 
 ### Application Layer
 
-**¿Qué contiene?**
-- Casos de uso (use cases)
-- Orquestación de lógica de negocio
-- DTOs internos
+**What does it contain?**
+- Use cases
+- Business logic orchestration
+- Internal DTOs
 
-**¿Qué NO contiene?**
-- Implementaciones de repositorios
-- Llamadas directas a servicios externos
-- Lógica HTTP
+**What does it NOT contain?**
+- Repository implementations
+- Direct calls to external services
+- HTTP logic
 
-**Ejemplo correcto**:
+**Correct example**:
 ```typescript
 // application/use-cases/create-appointment.usecase.ts
 export class CreateAppointmentUseCase {
@@ -86,50 +86,50 @@ export class CreateAppointmentUseCase {
   ) {}
 
   async execute(data: CreateAppointmentDto): Promise<Appointment> {
-    // Orquestación usando interfaces, no implementaciones
+    // Orchestration using interfaces, not implementations
   }
 }
 ```
 
 ### Infrastructure Layer
 
-**¿Qué contiene?**
-- Implementaciones de repositorios (Prisma, etc.)
-- Servicios externos (Email, SMS, Google Calendar)
-- Configuraciones técnicas
+**What does it contain?**
+- Repository implementations (Drizzle ORM, etc.)
+- External services (Email, SMS, Google Calendar)
+- Technical configurations
 
-**Puede usar**:
-- ORMs, librerías de base de datos
-- APIs externas
-- Frameworks técnicos
+**Can use**:
+- ORMs, database libraries
+- External APIs
+- Technical frameworks
 
-**Ejemplo correcto**:
+**Correct example**:
 ```typescript
-// infrastructure/database/repositories/prisma-appointment.repository.ts
-export class PrismaAppointmentRepository implements AppointmentRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+// infrastructure/database/repositories/drizzle-appointment.repository.ts
+export class DrizzleAppointmentRepository implements AppointmentRepository {
+  constructor(private readonly db: ReturnType<typeof drizzle>) {}
 
   async save(appointment: Appointment): Promise<void> {
-    // Implementación con Prisma
+    // Implementation with Drizzle
   }
 }
 ```
 
 ### Interfaces Layer
 
-**¿Qué contiene?**
-- Controladores HTTP (NestJS)
-- Guards de autenticación
-- Mappers DTO ↔ Domain
-- Configuración de providers (DI)
+**What does it contain?**
+- HTTP controllers (NestJS)
+- Authentication guards
+- DTO ↔ Domain mappers
+- Provider configuration (DI)
 
-**Responsabilidad**:
-- Recibir requests HTTP
-- Llamar a casos de uso
-- Transformar DTOs a entidades de dominio
-- Mapear respuestas
+**Responsibility**:
+- Receive HTTP requests
+- Call use cases
+- Transform DTOs to domain entities
+- Map responses
 
-**Ejemplo correcto**:
+**Correct example**:
 ```typescript
 // interfaces/http/controllers/appointment.controller.ts
 @Controller('appointments')
@@ -140,69 +140,70 @@ export class AppointmentController {
 
   @Post()
   async create(@Body() dto: CreateAppointmentDto) {
-    // Controlador delgado: solo llama al caso de uso
+    // Thin controller: only calls use case
     return this.createAppointmentUseCase.execute(dto);
   }
 }
 ```
 
-## Principios Clave
+## Key Principles
 
-### 1. Independencia del Framework
-- El dominio debe ser independiente de NestJS
-- Se puede cambiar de framework sin tocar el dominio
+### 1. Framework Independence
+- Domain must be independent of NestJS
+- Can change framework without touching domain
 
-### 2. Independencia de la UI
-- La lógica de negocio no conoce HTTP
-- Se puede exponer por CLI, GraphQL, etc. sin cambios
+### 2. UI Independence
+- Business logic does not know HTTP
+- Can expose via CLI, GraphQL, etc. without changes
 
-### 3. Independencia de la Base de Datos
-- El dominio no conoce Prisma o SQL
-- Se puede cambiar de DB sin tocar el dominio
+### 3. Database Independence
+- Domain does not know Drizzle ORM or SQL
+- Can change DB without touching domain
 
-### 4. Testabilidad
-- Cada capa debe ser testeable independientemente
-- El dominio debe ser testeable sin mocks complejos
+### 4. Testability
+- Each layer must be independently testable
+- Domain must be testable without complex mocks
 
-## Señales de Violación
+## Violation Signs
 
-Si encuentras estos patrones, hay una violación:
+If you find these patterns, there is a violation:
 
-1. **Import de NestJS en domain/**:
+1. **NestJS import in domain/**:
    ```typescript
-   // ❌ MAL
+   // ❌ BAD
    import { Injectable } from '@nestjs/common';
    ```
 
-2. **Import de Prisma en domain/**:
+2. **Drizzle import in domain/**:
    ```typescript
-   // ❌ MAL
-   import { PrismaClient } from '@prisma/client';
+   // ❌ BAD
+   // domain/entities/user.entity.ts
+   import { drizzle } from 'drizzle-orm/node-postgres';
    ```
 
-3. **Lógica HTTP en application/**:
+3. **HTTP logic in application/**:
    ```typescript
-   // ❌ MAL
+   // ❌ BAD
    import { Request, Response } from 'express';
    ```
 
-4. **Lógica de negocio en controllers**:
+4. **Business logic in controllers**:
    ```typescript
-   // ❌ MAL
+   // ❌ BAD
    @Controller()
    export class UserController {
      async create(@Body() dto) {
-       // Validación de negocio aquí
-       // Hash de password aquí
-       // Lógica compleja aquí
+       // Business validation here
+       // Password hash here
+       // Complex logic here
      }
    }
    ```
 
-## Validación Continua
+## Continuous Validation
 
-Revisar en cada commit:
-- ✅ ¿El dominio está libre de frameworks?
-- ✅ ¿Los casos de uso orquestan sin depender de infraestructura?
-- ✅ ¿Los controladores son delgados?
-- ✅ ¿Las dependencias siguen el flujo correcto?
+Review on each commit:
+- ✅ Is domain free of frameworks?
+- ✅ Do use cases orchestrate without depending on infrastructure?
+- ✅ Are controllers thin?
+- ✅ Do dependencies follow the correct flow?

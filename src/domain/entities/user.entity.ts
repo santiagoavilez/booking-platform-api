@@ -11,4 +11,12 @@ export class User {
   isProfessional(): boolean {
     return this.role === Role.PROFESSIONAL;
   }
+
+  /**
+   * Method to get password hash
+   * Should only be used by repositories for persistence
+   */
+  getPasswordHash(): string {
+    return this.passwordHash;
+  }
 }

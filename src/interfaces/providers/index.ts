@@ -1,0 +1,10 @@
+// src/interfaces/providers/index.ts
+
+/**
+ * Centralized file to export all providers
+ * Facilitates imports in NestJS modules
+ */
+
+export * from './database.providers';
+export * from './user.providers';
+export * from './services.providers';

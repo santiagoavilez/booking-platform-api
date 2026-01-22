@@ -2,35 +2,35 @@
 alwaysApply: false
 ---
 
-# Roadmap del Proyecto
+# Project Roadmap
 
-## Referencias Obligatorias
+## Mandatory References
 
-Este proyecto sigue los requisitos definidos en:
-- `proyect_requirements.md` - Requerimientos funcionales, arquitectónicos y técnicos
-- `technical_checklist.md` - Roadmap de fases de desarrollo (FASE 0 a FASE 5+)
+This project follows requirements defined in:
+- `proyect_requirements.md` - Functional, architectural and technical requirements
+- `technical_checklist.md` - Development phase roadmap (PHASE 0 to PHASE 5+)
 
-## Reglas de Consulta
+## Consultation Rules
 
-**IMPORTANTE**: Antes de implementar cualquier feature, DEBES consultar estos documentos para:
+**IMPORTANT**: Before implementing any feature, you MUST consult these documents to:
 
-1. **Verificar alcance**: La feature debe estar dentro del alcance del MVP
-2. **Entender requerimientos**: Revisar los requerimientos funcionales específicos
-3. **Seguir orden**: Respetar el orden de fases definido en el checklist técnico
+1. **Verify scope**: The feature must be within MVP scope
+2. **Understand requirements**: Review specific functional requirements
+3. **Follow order**: Respect the phase order defined in the technical checklist
 
-## Verificación de Alcance
+## Scope Verification
 
-Antes de agregar cualquier funcionalidad nueva, verificar `proyect_requirements.md` sección **"Alcance del MVP (Explícitamente Fuera)"** para confirmar que no está excluida.
+Before adding any new functionality, verify `proyect_requirements.md` section **"MVP Scope (Explicitly Out)"** to confirm it's not excluded.
 
-## Orden de Fases
+## Phase Order
 
-El desarrollo debe seguir el orden establecido en `technical_checklist.md`:
-- FASE 0: Setup
-- FASE 1: Dominio
-- FASE 2: Autenticación
-- FASE 3: Profesionales
-- FASE 4: Disponibilidad
-- FASE 5: Reservas (CORE)
-- Y siguientes...
+Development must follow the order established in `technical_checklist.md`:
+- PHASE 0: Setup
+- PHASE 1: Domain
+- PHASE 2: Authentication
+- PHASE 3: Professionals
+- PHASE 4: Availability
+- PHASE 5: Reservations (CORE)
+- And following...
 
-No avanzar a una fase sin completar la anterior, salvo casos justificados.
+Do not advance to a phase without completing the previous one, except justified cases.

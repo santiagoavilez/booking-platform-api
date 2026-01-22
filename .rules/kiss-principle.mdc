@@ -1,176 +1,176 @@
-# Principio KISS (Keep It Simple, Stupid)
+# KISS Principle (Keep It Simple, Stupid)
 
-## Regla Fundamental
+## Fundamental Rule
 
-**Preferir siempre soluciones simples sobre arquitecturas complejas innecesarias.**
+**Always prefer simple solutions over unnecessarily complex architectures.**
 
-## Aplicación en el MVP
+## Application in MVP
 
-### MVP = Funcionalidad Esencial
+### MVP = Essential Functionality
 
-Este es un MVP (Minimum Viable Product). Por lo tanto:
-- ✅ Implementar SOLO lo necesario para que funcione
-- ❌ NO implementar features "por si acaso"
-- ❌ NO crear abstracciones innecesarias
-- ❌ NO over-engineer
+This is an MVP (Minimum Viable Product). Therefore:
+- ✅ Implement ONLY what is necessary to make it work
+- ❌ DO NOT implement features "just in case"
+- ❌ DO NOT create unnecessary abstractions
+- ❌ DO NOT over-engineer
 
-### Simplicidad Primero
+### Simplicity First
 
-Si algo se puede hacer de forma simple, **hazlo simple**.
+If something can be done simply, **do it simply**.
 
-**Ejemplo correcto**:
+**Correct example**:
 ```typescript
-// ✅ BIEN: Simple y directo para MVP
+// ✅ GOOD: Simple and direct for MVP
 export class CreateAppointmentUseCase {
   async execute(data: CreateAppointmentDto): Promise<Appointment> {
-    // Validar disponibilidad
-    // Crear appointment
-    // Enviar notificaciones
+    // Validate availability
+    // Create appointment
+    // Send notifications
     return appointment;
   }
 }
 ```
 
-**Ejemplo incorrecto**:
+**Incorrect example**:
 ```typescript
-// ❌ MAL: Over-engineering innecesario para MVP
+// ❌ BAD: Unnecessary over-engineering for MVP
 export class CreateAppointmentUseCase {
   // Builder pattern, factory pattern, decorators, etc.
-  // cuando una clase simple funciona bien
+  // when a simple class works well
 }
 ```
 
-## Evitar Over-Engineering
+## Avoid Over-Engineering
 
-### ❌ NO Crear Abstracciones "Por Si Acaso"
+### ❌ DO NOT Create Abstractions "Just In Case"
 
-**Incorrecto**:
+**Incorrect**:
 ```typescript
-// ❌ MAL: Crear abstracciones que no se necesitan todavía
+// ❌ BAD: Create abstractions that are not needed yet
 interface IRepository<T> {
-  // Interface genérica que no se usa en ningún lado
+  // Generic interface that is not used anywhere
 }
 ```
 
-**Correcto**:
+**Correct**:
 ```typescript
-// ✅ BIEN: Crear interfaces cuando realmente se necesiten
+// ✅ GOOD: Create interfaces when they are really needed
 interface UserRepository {
-  // Interface específica que se usa
+  // Specific interface that is used
 }
 ```
 
-### ❌ NO Implementar Patrones Complejos Sin Necesidad
+### ❌ DO NOT Implement Complex Patterns Without Need
 
-Si una solución simple funciona, no agregar:
+If a simple solution works, do not add:
 - Multiple inheritance
-- Decorators complejos
-- Patrones de diseño avanzados sin justificación
-- Frameworks adicionales innecesarios
+- Complex decorators
+- Advanced design patterns without justification
+- Unnecessary additional frameworks
 
-### ✅ Implementar Solo lo Necesario
+### ✅ Implement Only What Is Necessary
 
-**Regla**: Si `proyect_requirements.md` no lo menciona explícitamente, probablemente no es necesario para el MVP.
+**Rule**: If `proyect_requirements.md` does not explicitly mention it, it's probably not necessary for the MVP.
 
-### ✅ Refactorizar Cuando Realmente Se Necesite
+### ✅ Refactor When Really Needed
 
-- Primero, hacerlo funcionar (simple)
-- Después, si realmente se necesita, refactorizar
-- No optimizar prematuramente
+- First, make it work (simple)
+- Then, if really needed, refactor
+- Do not optimize prematurely
 
-## Verificación de Alcance
+## Scope Verification
 
-**ANTES** de agregar cualquier feature, consultar:
+**BEFORE** adding any feature, consult:
 
-1. `proyect_requirements.md` - ¿Está en los requerimientos funcionales?
-2. `proyect_requirements.md` sección "Alcance del MVP (Explícitamente Fuera)" - ¿Está excluida?
-3. `technical_checklist.md` - ¿Es parte de la fase actual?
+1. `proyect_requirements.md` - Is it in the functional requirements?
+2. `proyect_requirements.md` section "MVP Scope (Explicitly Out)" - Is it excluded?
+3. `technical_checklist.md` - Is it part of the current phase?
 
-### Features Explícitamente Fuera del Alcance
+### Features Explicitly Out of Scope
 
-Según `proyect_requirements.md`, NO implementar:
-- ❌ Pagos
-- ❌ Cancelación o reprogramación de citas
-- ❌ Recordatorios automáticos previos
-- ❌ Chats entre usuarios
-- ❌ Panel administrativo
-- ❌ Manejo avanzado de calendarios (feriados, excepciones, buffers)
-- ❌ Multimoneda o internacionalización
+According to `proyect_requirements.md`, DO NOT implement:
+- ❌ Payments
+- ❌ Appointment cancellation or rescheduling
+- ❌ Automatic prior reminders
+- ❌ Chats between users
+- ❌ Admin panel
+- ❌ Advanced calendar handling (holidays, exceptions, buffers)
+- ❌ Multi-currency or internationalization
 
-## Señales de Over-Engineering
+## Over-Engineering Signs
 
-Si encuentras estos patrones, probablemente hay over-engineering:
+If you find these patterns, there is probably over-engineering:
 
-1. **Abstracciones no usadas**: Interfaces o clases creadas "por si acaso"
-2. **Patrones complejos sin justificación**: Usar design patterns avanzados sin necesidad real
-3. **Múltiples capas innecesarias**: Agregar capas que no aportan valor
-4. **Configuraciones complejas**: Setup excesivo para funcionalidad simple
-5. **Features fuera del MVP**: Implementar cosas no requeridas
+1. **Unused abstractions**: Interfaces or classes created "just in case"
+2. **Complex patterns without justification**: Using advanced design patterns without real need
+3. **Unnecessary multiple layers**: Adding layers that don't add value
+4. **Complex configurations**: Excessive setup for simple functionality
+5. **Features outside MVP**: Implementing things not required
 
 ## Balance: KISS vs Clean Architecture
 
-**KISS no significa código desorganizado**.
+**KISS does not mean disorganized code**.
 
-- ✅ Mantener Clean Architecture (simplicidad en la estructura)
-- ✅ Mantener SOLID (simplicidad en el diseño)
-- ❌ NO significa mezclar capas por "simplicidad"
-- ❌ NO significa evitar patrones necesarios (como Strategy para notificaciones)
+- ✅ Maintain Clean Architecture (simplicity in structure)
+- ✅ Maintain SOLID (simplicity in design)
+- ❌ Does NOT mean mixing layers for "simplicity"
+- ❌ Does NOT mean avoiding necessary patterns (like Strategy for notifications)
 
-**Regla**: Usar la solución MÁS SIMPLE que respete Clean Architecture y SOLID.
+**Rule**: Use the SIMPLEST solution that respects Clean Architecture and SOLID.
 
-## Ejemplos Prácticos
+## Practical Examples
 
-### Validación Simple
+### Simple Validation
 
-**✅ BIEN (KISS)**:
+**✅ GOOD (KISS)**:
 ```typescript
-// Validación simple y directa
+// Simple and direct validation
 if (!email || !email.includes('@')) {
   throw new Error('Invalid email');
 }
 ```
 
-**❌ MAL (Over-engineering)**:
+**❌ BAD (Over-engineering)**:
 ```typescript
-// Validación compleja innecesaria para MVP
+// Unnecessary complex validation for MVP
 class EmailValidatorFactory {
   createValidator(config) {
     return new CompositeValidator([
       new RegexValidator(),
       new DomainValidator(),
       new MXRecordValidator(),
-      // ... para un MVP simple
+      // ... for a simple MVP
     ]);
   }
 }
 ```
 
-### Persistencia Simple
+### Simple Persistence
 
-**✅ BIEN (KISS)**:
+**✅ GOOD (KISS)**:
 ```typescript
-// Prisma directamente en el repositorio
-export class PrismaUserRepository {
+// Drizzle directly in the repository
+export class DrizzleUserRepository {
   async save(user: User): Promise<void> {
-    await this.prisma.user.create({ data: user });
+    await this.db.insert(users).values(user);
   }
 }
 ```
 
-**❌ MAL (Over-engineering)**:
+**❌ BAD (Over-engineering)**:
 ```typescript
-// Múltiples capas innecesarias
+// Unnecessary multiple layers
 class UserRepositoryDecorator {
   constructor(private repository: IRepository<User>) {}
-  // ... wrappers innecesarios
+  // ... unnecessary wrappers
 }
 ```
 
-## Checklist KISS
+## KISS Checklist
 
-Antes de implementar:
-- ✅ ¿Es la solución más simple que funciona?
-- ✅ ¿Está dentro del alcance del MVP?
-- ✅ ¿No estoy agregando complejidad innecesaria?
-- ✅ ¿Realmente necesito esta abstracción ahora?
-- ✅ ¿Esto está en los requerimientos o es "nice to have"?
+Before implementing:
+- ✅ Is it the simplest solution that works?
+- ✅ Is it within MVP scope?
+- ✅ Am I not adding unnecessary complexity?
+- ✅ Do I really need this abstraction now?
+- ✅ Is this in the requirements or is it "nice to have"?

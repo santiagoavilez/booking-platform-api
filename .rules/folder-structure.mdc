@@ -1,89 +1,89 @@
 ---
 alwaysApply: true
 ---
-### 📁 `src/infrastructure/` - Capa de Infraestructura (🧱 Implementaciones)
+### 📁 `src/infrastructure/` - Infrastructure Layer (🧱 Implementations)
 
-**Restricciones**:
-- ✅ Puede importar de `domain/` y `application/`
-- ❌ NO puede importar de `interfaces/`
+**Restrictions**:
+- ✅ Can import from `domain/` and `application/`
+- ❌ CANNOT import from `interfaces/`
 
-**Subcarpetas permitidas**:
+**Allowed subfolders**:
 
 #### `infrastructure/database/`
-- **Contenido**: Implementaciones de repositorios y ORM
-- **Subcarpetas**:
-  - `prisma/`: Configuración de Prisma (schema, client)
-  - `repositories/`: Implementaciones de repositorios
-    - **Formato**: `prisma-*.repository.ts`
-    - **Ejemplos**: `prisma-user.repository.ts`, `prisma-appointment.repository.ts`
+- **Content**: Repository implementations and ORM
+- **Subfolders**:
+  - `drizzle/`: Drizzle configuration (schema, client)
+  - `repositories/`: Repository implementations
+    - **Format**: `drizzle-*.repository.ts`
+    - **Examples**: `drizzle-user.repository.ts`, `drizzle-appointment.repository.ts`
 
 #### `infrastructure/notifications/`
-- **Contenido**: Estrategias de notificación (Strategy Pattern)
-- **Formato**: `*.strategy.ts`
-- **Ejemplos**: `email.strategy.ts`, `sms.strategy.ts`, `push.strategy.ts`
-- **También incluye**: `notification-strategy.factory.ts`
+- **Content**: Notification strategies (Strategy Pattern)
+- **Format**: `*.strategy.ts`
+- **Examples**: `email.strategy.ts`, `sms.strategy.ts`, `push.strategy.ts`
+- **Also includes**: `notification-strategy.factory.ts`
 
 #### `infrastructure/calendar/`
-- **Contenido**: Integraciones externas (Google Calendar, etc.)
-- **Formato**: `*.service.ts`
-- **Ejemplos**: `google-calendar.service.ts`
+- **Content**: External integrations (Google Calendar, etc.)
+- **Format**: `*.service.ts`
+- **Examples**: `google-calendar.service.ts`
 
 ---
 
-### 📁 `src/interfaces/` - Capa de Interfaz (🌐 Adaptadores HTTP)
+### 📁 `src/interfaces/` - Interface Layer (🌐 HTTP Adapters)
 
-**Restricciones**:
-- ✅ Puede importar de `domain/`, `application/` e `infrastructure/`
-- **Nota**: Es la capa más externa, expone la aplicación al mundo
+**Restrictions**:
+- ✅ Can import from `domain/`, `application/` and `infrastructure/`
+- **Note**: It's the outermost layer, exposes the application to the world
 
-**Subcarpetas permitidas**:
+**Allowed subfolders**:
 
 #### `interfaces/http/controllers/`
-- **Contenido**: Controladores HTTP (NestJS)
-- **Formato**: `*.controller.ts`
-- **Ejemplos**: `auth.controller.ts`, `appointment.controller.ts`
-- **Regla**: Controladores deben ser DELGADOS - solo reciben requests y llaman a casos de uso
+- **Content**: HTTP controllers (NestJS)
+- **Format**: `*.controller.ts`
+- **Examples**: `auth.controller.ts`, `appointment.controller.ts`
+- **Rule**: Controllers must be THIN - only receive requests and call use cases
 
 #### `interfaces/http/guards/`
-- **Contenido**: Guards de autenticación/autorización
-- **Formato**: `*.guard.ts`
-- **Ejemplos**: `jwt-auth.guard.ts`
+- **Content**: Authentication/authorization guards
+- **Format**: `*.guard.ts`
+- **Examples**: `jwt-auth.guard.ts`
 
 #### `interfaces/http/mappers/`
-- **Contenido**: Mappers DTO ↔ Entidad de Dominio
-- **Formato**: `*.mapper.ts`
-- **Regla**: Transforman DTOs HTTP a objetos de dominio y viceversa
+- **Content**: DTO ↔ Domain Entity mappers
+- **Format**: `*.mapper.ts`
+- **Rule**: Transform HTTP DTOs to domain objects and vice versa
 
 #### `interfaces/providers.ts`
-- **Contenido**: Configuración de inyección de dependencias (NestJS)
-- **Formato**: `providers.ts` (archivo único o por módulo)
-- **Regla**: Mapea interfaces con implementaciones concretas
+- **Content**: Dependency injection configuration (NestJS)
+- **Format**: `providers.ts` (single file or per module)
+- **Rule**: Maps interfaces with concrete implementations
 
 ---
 
-### 📁 `src/shared/` - Utilidades Compartidas
+### 📁 `src/shared/` - Shared Utilities
 
-**Contenido**:
-- Helpers, utilities, constantes
-- Funciones puras sin dependencias de frameworks
+**Content**:
+- Helpers, utilities, constants
+- Pure functions without framework dependencies
 
-**Restricciones**:
-- ❌ NO debe contener lógica de negocio
-- ❌ NO debe importar de otras capas (debe ser independiente)
+**Restrictions**:
+- ❌ Must NOT contain business logic
+- ❌ Must NOT import from other layers (must be independent)
 
 ---
 
-## Verificación de Ubicación
+## Location Verification
 
-Antes de crear cualquier archivo nuevo, seguir estos pasos:
+Before creating any new file, follow these steps:
 
-1. **Identificar la capa**: ¿Qué responsabilidad tiene el archivo?
-2. **Consultar `folder_structure.md`**: Verificar la ubicación exacta
-3. **Verificar dependencias**: ¿De qué puede importar según su capa?
-4. **Validar formato**: ¿El nombre sigue las convenciones de nomenclatura?
+1. **Identify the layer**: What responsibility does the file have?
+2. **Consult `folder_structure.md`**: Verify the exact location
+3. **Verify dependencies**: What can it import according to its layer?
+4. **Validate format**: Does the name follow naming conventions?
 
-## Prohibiciones Estrictas
+## Strict Prohibitions
 
-- ❌ NO crear archivos fuera de estas carpetas
-- ❌ NO mezclar responsabilidades de diferentes capas
-- ❌ NO importar desde capas incorrectas (ver `dependencies.mdc`)
+- ❌ DO NOT create files outside these folders
+- ❌ DO NOT mix responsibilities from different layers
+- ❌ DO NOT import from incorrect layers (see `dependencies.mdc`)

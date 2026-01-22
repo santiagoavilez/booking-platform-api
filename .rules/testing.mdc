@@ -2,72 +2,72 @@
 alwaysApply: false
 ---
 
-# Reglas de Testing
+# Testing Rules
 
-## Estructura de Tests
+## Test Structure
 
-### Tests Unitarios
+### Unit Tests
 
-**Para qué**: Lógica de negocio pura, casos de uso, entidades, value objects.
+**For what**: Pure business logic, use cases, entities, value objects.
 
-**Ubicación**: Junto al archivo de código
-- `*.spec.ts` al lado del archivo original
-- Ejemplo: `create-appointment.usecase.ts` → `create-appointment.usecase.spec.ts`
+**Location**: Next to the code file
+- `*.spec.ts` next to the original file
+- Example: `create-appointment.usecase.ts` → `create-appointment.usecase.spec.ts`
 
-**Ejemplo**:
+**Example**:
 ```typescript
 // application/use-cases/create-appointment.usecase.spec.ts
 import { CreateAppointmentUseCase } from './create-appointment.usecase';
 
 describe('CreateAppointmentUseCase', () => {
   it('should create an appointment', () => {
-    // Test unitario
+    // Unit test
   });
 });
 ```
 
-### Tests de Integración
+### Integration Tests
 
-**Para qué**: Repositorios, integraciones con base de datos, servicios externos.
+**For what**: Repositories, database integrations, external services.
 
-**Ubicación**: Junto al archivo o en carpeta `__tests__/`
+**Location**: Next to the file or in `__tests__/` folder
 
-**Ejemplo**:
+**Example**:
 ```typescript
-// infrastructure/database/repositories/__tests__/prisma-appointment.repository.spec.ts
-import { PrismaAppointmentRepository } from '../prisma-appointment.repository';
+// infrastructure/database/repositories/__tests__/drizzle-appointment.repository.spec.ts
+import { DrizzleAppointmentRepository } from '../drizzle-appointment.repository';
 
-describe('PrismaAppointmentRepository', () => {
+describe('DrizzleAppointmentRepository', () => {
   it('should save appointment to database', async () => {
-    // Test de integración con DB real o mock
+    // Integration test with real DB or mock
   });
 });
 ```
 
-### Tests E2E (End-to-End)
+### E2E Tests (End-to-End)
 
-**Para qué**: Endpoints HTTP completos, flujos de usuario completos.
+**For what**: Complete HTTP endpoints, complete user flows.
 
-**Ubicación**: `test/` en la raíz del proyecto
+**Location**: `test/` in project root
 
-**Ejemplo**:
+**Example**:
 ```typescript
 // test/appointment.e2e-spec.ts
 import request from 'supertest';
 
 describe('Appointment E2E', () => {
   it('POST /appointments should create appointment', () => {
-    // Test E2E completo
+    // Complete E2E test
   });
 });
 ```
 
-## Convenciones de Nombres
+## Naming Conventions
 
-### Archivos de Test
-- **Formato**: `*.spec.ts` para tests unitarios e integración
-- **Formato**: `*.e2e-spec.ts` para tests E2E
-- **Ubicación**: Junto al código o en `test/` para E2E
+### Test Files
+- **Format**: `*.spec.ts` for unit and integration tests
+- **Format**: `*.e2e-spec.ts` for E2E tests
+- **Location**: Next to code or in `test/` for E2E
 
 ### Describe Blocks
 ```typescript
@@ -81,63 +81,63 @@ describe('ClassName', () => {
 ```
 
 ### Test Names
-- Usar descripciones claras que expliquen qué debería hacer el código
-- Formato: `should [acción esperada]`
-- Ejemplos:
+- Use clear descriptions that explain what the code should do
+- Format: `should [expected action]`
+- Examples:
   - `should create appointment when available`
   - `should throw error when appointment is in the past`
   - `should send notification to both client and professional`
 
-## Mocking en Tests
+## Mocking in Tests
 
-### Mocking de Repositorios
+### Repository Mocking
 
-**✅ BIEN**:
+**✅ GOOD**:
 ```typescript
 const mockUserRepository: jest.Mocked<UserRepository> = {
   findById: jest.fn(),
   save: jest.fn(),
 };
 
-// En el test
+// In the test
 mockUserRepository.findById.mockResolvedValue(user);
 ```
 
-### Mocking de Servicios Externos
+### External Service Mocking
 
-**✅ BIEN**:
+**✅ GOOD**:
 ```typescript
 const mockNotificationStrategy: jest.Mocked<NotificationStrategy> = {
   send: jest.fn(),
 };
 ```
 
-### Evitar Mocking del Dominio
+### Avoid Domain Mocking
 
-**❌ MAL**: Mockear entidades de dominio o value objects
-**✅ BIEN**: Usar instancias reales de entidades en tests
+**❌ BAD**: Mock domain entities or value objects
+**✅ GOOD**: Use real instances of entities in tests
 
 ## Coverage
 
-### Cobertura Mínima Recomendada
+### Minimum Recommended Coverage
 
-- **Domain**: 100% (lógica crítica)
+- **Domain**: 100% (critical logic)
 - **Application (Use Cases)**: >90%
 - **Infrastructure**: >80%
 - **Interfaces (Controllers)**: >70%
 
-### Ejecutar Coverage
+### Run Coverage
 
 ```bash
 npm run test:cov
 ```
 
-## Estructura AAA (Arrange-Act-Assert)
+## AAA Structure (Arrange-Act-Assert)
 
-**✅ BIEN**:
+**✅ GOOD**:
 ```typescript
 it('should create appointment when available', async () => {
-  // Arrange: Preparar datos y mocks
+  // Arrange: Prepare data and mocks
   const appointmentData = {
     professionalId: 'prof-1',
     clientId: 'client-1',
@@ -145,20 +145,20 @@ it('should create appointment when available', async () => {
   };
   const mockRepository = createMockRepository();
 
-  // Act: Ejecutar la acción
+  // Act: Execute the action
   const result = await useCase.execute(appointmentData);
 
-  // Assert: Verificar resultado
+  // Assert: Verify result
   expect(result).toBeDefined();
   expect(mockRepository.save).toHaveBeenCalledWith(expect.any(Appointment));
 });
 ```
 
-## Testear el Dominio
+## Testing the Domain
 
-### Entidades
+### Entities
 
-**✅ BIEN**: Testear lógica de negocio de entidades
+**✅ GOOD**: Test business logic of entities
 
 ```typescript
 // domain/entities/appointment.entity.spec.ts
@@ -175,7 +175,7 @@ describe('Appointment', () => {
 
 ### Value Objects
 
-**✅ BIEN**: Testear validación de value objects
+**✅ GOOD**: Test value object validation
 
 ```typescript
 // domain/value-objects/email.vo.spec.ts
@@ -188,11 +188,11 @@ describe('Email', () => {
 });
 ```
 
-## Testear Casos de Uso
+## Testing Use Cases
 
-### Mockear Dependencias
+### Mock Dependencies
 
-**✅ BIEN**:
+**✅ GOOD**:
 ```typescript
 // application/use-cases/create-appointment.usecase.spec.ts
 describe('CreateAppointmentUseCase', () => {
@@ -227,40 +227,40 @@ describe('CreateAppointmentUseCase', () => {
 });
 ```
 
-## Testear Repositorios (Integración)
+## Testing Repositories (Integration)
 
-### Usar Base de Datos de Test
+### Use Test Database
 
-**✅ BIEN**: Usar Prisma con base de datos de test separada
+**✅ GOOD**: Use Drizzle ORM with separate test database
 
 ```typescript
-// infrastructure/database/repositories/__tests__/prisma-user.repository.spec.ts
-describe('PrismaUserRepository (Integration)', () => {
-  let repository: PrismaUserRepository;
-  let prisma: PrismaClient;
+// infrastructure/database/repositories/__tests__/drizzle-user.repository.spec.ts
+describe('DrizzleUserRepository (Integration)', () => {
+  let repository: DrizzleUserRepository;
+  let db: ReturnType<typeof drizzle>;
 
   beforeAll(async () => {
-    prisma = new PrismaClient({
-      // Conexión a DB de test
+    db = drizzle({
+      // Test DB connection
     });
-    repository = new PrismaUserRepository(prisma);
+    repository = new DrizzleUserRepository(db);
   });
 
   afterAll(async () => {
-    await prisma.$disconnect();
+    // Close connection if necessary
   });
 
   it('should save and retrieve user', async () => {
-    // Test con DB real de test
+    // Test with real test DB
   });
 });
 ```
 
-## Testear Controllers (E2E o Unit)
+## Testing Controllers (E2E or Unit)
 
-### E2E con Supertest
+### E2E with Supertest
 
-**✅ BIEN**:
+**✅ GOOD**:
 ```typescript
 // test/appointment.e2e-spec.ts
 describe('AppointmentController (e2e)', () => {
@@ -268,7 +268,7 @@ describe('AppointmentController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
-      // Configurar módulo de test
+      // Configure test module
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -284,34 +284,34 @@ describe('AppointmentController (e2e)', () => {
 });
 ```
 
-## Principios de Testing
+## Testing Principles
 
-### 1. Tests Independientes
+### 1. Independent Tests
 
-Cada test debe poder ejecutarse independientemente sin depender de otros tests.
+Each test must be able to run independently without depending on other tests.
 
-### 2. Tests Determinísticos
+### 2. Deterministic Tests
 
-Los tests deben dar el mismo resultado siempre (sin aleatoriedad, sin dependencias externas inestables).
+Tests must give the same result always (no randomness, no unstable external dependencies).
 
-### 3. Tests Rápidos
+### 3. Fast Tests
 
-Los tests unitarios deben ser rápidos (<100ms cada uno). Los tests de integración pueden ser más lentos.
+Unit tests must be fast (<100ms each). Integration tests can be slower.
 
-### 4. Tests Claros
+### 4. Clear Tests
 
-El nombre del test debe explicar claramente qué se está testeando y qué resultado se espera.
+The test name must clearly explain what is being tested and what result is expected.
 
-### 5. Un Assert por Concepto
+### 5. One Assert per Concept
 
-Preferir múltiples `expect()` relacionados que verifiquen un mismo concepto, pero evitar tests que validen demasiadas cosas diferentes.
+Prefer multiple related `expect()` that verify the same concept, but avoid tests that validate too many different things.
 
-## Checklist de Testing
+## Testing Checklist
 
-Antes de commit:
-- ✅ ¿Tengo tests para la lógica nueva?
-- ✅ ¿Los nombres de los tests son descriptivos?
-- ✅ ¿Los tests siguen la estructura AAA?
-- ✅ ¿Estoy mockeando las dependencias correctamente?
-- ✅ ¿Los tests son independientes?
-- ✅ ¿El código de test es claro y mantenible?
+Before commit:
+- ✅ Do I have tests for the new logic?
+- ✅ Are test names descriptive?
+- ✅ Do tests follow the AAA structure?
+- ✅ Am I mocking dependencies correctly?
+- ✅ Are tests independent?
+- ✅ Is test code clear and maintainable?
