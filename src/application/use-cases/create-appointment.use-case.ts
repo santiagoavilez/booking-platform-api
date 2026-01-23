@@ -112,9 +112,7 @@ export class CreateAppointmentUseCase {
       );
 
     if (overlappingAppointments.length > 0) {
-      throw new Error(
-        'Professional already has an appointment at this time',
-      );
+      throw new Error('Professional already has an appointment at this time');
     }
 
     // 8. Create appointment (domain entity)
@@ -127,9 +125,8 @@ export class CreateAppointmentUseCase {
     );
 
     // 9. Persist
-    const savedAppointment = await this.appointmentRepository.create(
-      appointment,
-    );
+    const savedAppointment =
+      await this.appointmentRepository.create(appointment);
 
     // 10. Return result
     return {

@@ -54,20 +54,10 @@ export class RegisterUserUseCase {
   ) {}
 
   async execute(input: RegisterUserInput): Promise<RegisterUserOutput> {
-    // 1. Validate basic email format
-    if (!this.isValidEmail(input.email)) {
-      throw new Error('Invalid email format');
-    }
-
-    // 2. Validate that email does not exist
+    // Validate that email does not exist
     const existingUser = await this.userRepository.findByEmail(input.email);
     if (existingUser) {
       throw new Error('User with this email already exists');
-    }
-
-    // 3. Validate minimum password length
-    if (input.password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
     }
 
     // 4. Hash password using injected service (implemented in Infrastructure)
@@ -88,14 +78,5 @@ export class RegisterUserUseCase {
       email: savedUser.email,
       role: savedUser.role,
     };
-  }
-
-  /**
-   * Basic email format validation
-   * For more robust validation, an Email Value Object could be created in Domain
-   */
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
   }
 }

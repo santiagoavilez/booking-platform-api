@@ -1,34 +1,31 @@
-// src/application/use-cases/auth/login.use-case.ts
+// src/application/use-cases/auth/refresh-token.use-case.ts
 
 import { Inject, Injectable } from '@nestjs/common';
-import { type IUserRepository } from '../../../domain/repositories/user.repository';
 import { type IRefreshTokenRepository } from '../../../domain/repositories/refresh-token.repository';
+import { type IUserRepository } from '../../../domain/repositories/user.repository';
 import {
+  REFRESH_TOKEN_REPOSITORY,
   USER_REPOSITORY,
   JWT_TOKEN_GENERATOR,
-  PASSWORD_HASHER,
-  REFRESH_TOKEN_REPOSITORY,
   ID_GENERATOR,
   JWT_CONFIG,
 } from '../../../interfaces/providers';
 import type { IJwtTokenGenerator } from '../../../domain/services/jwt-token-generator.interface';
-import type { IPasswordHasher } from '../../../domain/services/password-hasher.interface';
 import type { IIdGenerator } from '../../../domain/services/id-generator.interface';
 import type { JwtConfig } from '../../../interfaces/providers/config.providers';
 import { RefreshToken } from '../../../domain/entities/refresh-token.entity';
 
 /**
  * ARCHITECTURAL DECISION:
- * - What: Use case for user authentication
- * - Why: Separates authentication logic from HTTP controller
- * - Responsibilities: Validate credentials and generate JWT token
+ * - What: Use case for refreshing JWT tokens
+ * - Why: Separates token refresh logic from HTTP controller
+ * - Responsibilities: Validate refresh token and generate new access token
  */
-export interface LoginInput {
-  email: string;
-  password: string;
+export interface RefreshTokenInput {
+  refreshToken: string;
 }
 
-export interface LoginOutput {
+export interface RefreshTokenOutput {
   token: string;
   expiresAt: number; // Unix timestamp in seconds
   refreshToken: string;
@@ -41,64 +38,72 @@ export interface LoginOutput {
 }
 
 @Injectable()
-export class LoginUseCase {
+export class RefreshTokenUseCase {
   constructor(
+    @Inject(REFRESH_TOKEN_REPOSITORY)
+    private readonly refreshTokenRepository: IRefreshTokenRepository,
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
     @Inject(JWT_TOKEN_GENERATOR)
     private readonly jwtTokenGenerator: IJwtTokenGenerator,
-    @Inject(PASSWORD_HASHER)
-    private readonly passwordHasher: IPasswordHasher,
-    @Inject(REFRESH_TOKEN_REPOSITORY as symbol)
-    private readonly refreshTokenRepository: IRefreshTokenRepository,
     @Inject(ID_GENERATOR)
     private readonly idGenerator: IIdGenerator,
     @Inject(JWT_CONFIG)
     private readonly jwtConfig: JwtConfig,
   ) {}
 
-  async execute(input: LoginInput): Promise<LoginOutput> {
-    // 1. Find user by email
-    const user = await this.userRepository.findByEmail(input.email);
-    if (!user) {
-      throw new Error('Invalid credentials');
+  async execute(input: RefreshTokenInput): Promise<RefreshTokenOutput> {
+    // 1. Find refresh token
+    const refreshTokenEntity =
+      await this.refreshTokenRepository.findByToken(input.refreshToken);
+
+    if (!refreshTokenEntity) {
+      throw new Error('Invalid refresh token');
     }
 
-    // 2. Verify password (will be implemented with infrastructure service)
-    const isValidPassword = await this.passwordHasher.compare(
-      input.password,
-      user.getPasswordHash(),
+    // 2. Validate refresh token (not expired, not revoked)
+    if (!refreshTokenEntity.isValid()) {
+      throw new Error('Invalid or expired refresh token');
+    }
+
+    // 3. Find user
+    const user = await this.userRepository.findById(
+      refreshTokenEntity.userId,
     );
-    if (!isValidPassword) {
-      throw new Error('Invalid credentials');
+
+    if (!user) {
+      throw new Error('User not found');
     }
 
-    // 3. Generate JWT token
-    const token = await this.jwtTokenGenerator.generateToken(
+    // 4. Revoke old refresh token
+    await this.refreshTokenRepository.revoke(input.refreshToken);
+
+    // 5. Generate new access token
+    const newAccessToken = await this.jwtTokenGenerator.generateToken(
       user.id,
       user.role,
     );
 
-    // 4. Generate refresh token
-    const refreshTokenId = this.idGenerator.generate();
-    const refreshTokenValue = this.idGenerator.generate();
+    // 6. Generate new refresh token
+    const newRefreshTokenId = this.idGenerator.generate();
+    const newRefreshTokenValue = this.idGenerator.generate(); // Use as token value
     const refreshTokenExpiresAt = this.calculateRefreshTokenExpiration();
 
-    const refreshTokenEntity = new RefreshToken(
-      refreshTokenId,
-      refreshTokenValue,
+    const newRefreshTokenEntity = new RefreshToken(
+      newRefreshTokenId,
+      newRefreshTokenValue,
       user.id,
       refreshTokenExpiresAt,
       new Date(),
     );
 
-    await this.refreshTokenRepository.create(refreshTokenEntity);
+    await this.refreshTokenRepository.create(newRefreshTokenEntity);
 
-    // 5. Return tokens and user data
+    // 7. Return new tokens and user data
     return {
-      token,
+      token: newAccessToken,
       expiresAt: this.jwtTokenGenerator.getExpirationTimestamp(),
-      refreshToken: refreshTokenValue,
+      refreshToken: newRefreshTokenValue,
       refreshTokenExpiresAt: Math.floor(refreshTokenExpiresAt.getTime() / 1000),
       user: {
         id: user.id,

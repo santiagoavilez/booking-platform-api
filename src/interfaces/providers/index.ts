@@ -8,3 +8,5 @@
 export * from './database.providers';
 export * from './user.providers';
 export * from './services.providers';
+export * from './config.providers';
+export * from './refresh-token.providers';
