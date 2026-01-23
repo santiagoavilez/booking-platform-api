@@ -1,6 +1,6 @@
 // src/application/use-cases/auth/register-user.use-case.ts
 
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { User } from '../../../domain/entities/user.entity';
 import { Role } from '../../../domain/enums/role.enum';
 import { type IUserRepository } from '../../../domain/repositories/user.repository';
@@ -11,12 +11,18 @@ import {
   PASSWORD_HASHER,
   ID_GENERATOR,
 } from '../../../interfaces/providers';
+import { LoginUseCase, type LoginOutput } from './login.use-case';
 
 /**
  * ARCHITECTURAL DECISION:
- * - What: Use case for user registration
- * - Why: Centralizes registration logic, validations and user creation
+ * - What: Use case for user registration with automatic login
+ * - Why: Centralizes registration logic and automatically authenticates the user
  * - Alternatives: Logic in controller, but would violate Single Responsibility
+ *
+ * COMPOSITION PATTERN:
+ * - This use case composes LoginUseCase to generate tokens after registration
+ * - This is a VALID Clean Architecture pattern: use cases can compose other use cases
+ * - Avoids code duplication and reuses tested login logic
  *
  * RESPONSIBILITIES:
  * - Validate that email does not exist
@@ -24,6 +30,7 @@ import {
  * - Generate unique ID using IIdGenerator (injected from Infrastructure)
  * - Create user with appropriate role
  * - Persist to database using IUserRepository (interface)
+ * - Auto-login: Generate tokens using LoginUseCase
  *
  * CLEAN ARCHITECTURE:
  * - Depends ONLY on Domain interfaces (IUserRepository, IPasswordHasher, IIdGenerator)
@@ -36,11 +43,13 @@ export interface RegisterUserInput {
   role: Role;
 }
 
-export interface RegisterUserOutput {
-  id: string;
-  email: string;
-  role: Role;
-}
+/**
+ * ARCHITECTURAL DECISION:
+ * - What: RegisterUserOutput now includes authentication tokens
+ * - Why: Auto-login after registration improves UX - user doesn't need to login separately
+ * - Pattern: Returns same structure as LoginOutput for consistency
+ */
+export type RegisterUserOutput = LoginOutput;
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -51,32 +60,46 @@ export class RegisterUserUseCase {
     private readonly passwordHasher: IPasswordHasher,
     @Inject(ID_GENERATOR)
     private readonly idGenerator: IIdGenerator,
+    @Inject(forwardRef(() => LoginUseCase))
+    private readonly loginUseCase: LoginUseCase,
   ) {}
 
   async execute(input: RegisterUserInput): Promise<RegisterUserOutput> {
-    // Validate that email does not exist
+    // 1. Validate that email does not exist
     const existingUser = await this.userRepository.findByEmail(input.email);
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
 
-    // 4. Hash password using injected service (implemented in Infrastructure)
+    // 2. Hash password using injected service (implemented in Infrastructure)
     const passwordHash = await this.passwordHasher.hash(input.password);
 
-    // 5. Generate unique ID using injected service (implemented in Infrastructure)
+    // 3. Generate unique ID using injected service (implemented in Infrastructure)
     const userId = this.idGenerator.generate();
 
-    // 6. Create domain entity
+    // 4. Create domain entity
     const user = new User(userId, input.email, passwordHash, input.role);
 
-    // 7. Persist using repository (interface, implementation in Infrastructure)
-    const savedUser = await this.userRepository.create(user);
+    // 5. Persist using repository (interface, implementation in Infrastructure)
+    await this.userRepository.create(user);
 
-    // 8. Return result (without exposing passwordHash for security)
-    return {
-      id: savedUser.id,
-      email: savedUser.email,
-      role: savedUser.role,
-    };
+    /**
+     * 6. Auto-login: Generate tokens by calling LoginUseCase
+     *
+     * ARCHITECTURAL DECISION:
+     * - What: Compose LoginUseCase instead of duplicating token generation logic
+     * - Why: Follows DRY principle and reuses tested login logic
+     * - Pattern: Use case composition is valid in Clean Architecture
+     *
+     * We pass the plaintext password (from input) which LoginUseCase
+     * will verify against the just-saved hash - this will always succeed
+     * since we just created the user with that password.
+     */
+    const loginResult = await this.loginUseCase.execute({
+      email: input.email,
+      password: input.password,
+    });
+
+    return loginResult;
   }
 }
