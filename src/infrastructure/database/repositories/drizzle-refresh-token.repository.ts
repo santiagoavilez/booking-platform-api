@@ -20,9 +20,7 @@ import type { DrizzleClient } from '../drizzle';
  * - Transforms between DB format and domain entity
  */
 @Injectable()
-export class DrizzleRefreshTokenRepository
-  implements IRefreshTokenRepository
-{
+export class DrizzleRefreshTokenRepository implements IRefreshTokenRepository {
   constructor(private readonly db: DrizzleClient) {}
 
   async create(refreshToken: RefreshToken): Promise<RefreshToken> {
@@ -71,10 +69,7 @@ export class DrizzleRefreshTokenRepository
       .update(refreshTokens)
       .set({ revokedAt: new Date() })
       .where(
-        and(
-          eq(refreshTokens.userId, userId),
-          isNull(refreshTokens.revokedAt),
-        ),
+        and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)),
       );
   }
 

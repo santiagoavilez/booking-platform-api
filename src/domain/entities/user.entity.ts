@@ -6,7 +6,16 @@ export class User {
     public readonly email: string,
     private passwordHash: string,
     public readonly role: Role,
+    public readonly firstName: string,
+    public readonly lastName: string,
   ) {}
+
+  /**
+   * Returns the full name of the user
+   */
+  getFullName(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
 
   isProfessional(): boolean {
     return this.role === Role.PROFESSIONAL;

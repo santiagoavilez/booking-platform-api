@@ -1,6 +1,12 @@
 // src/interfaces/http/dto/register-user.dto.ts
 
-import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+} from 'class-validator';
 import { Role } from '../../../domain/enums/role.enum';
 
 /**
@@ -23,4 +29,12 @@ export class RegisterUserDto {
 
   @IsEnum(Role, { message: 'Role must be either CLIENT or PROFESSIONAL' })
   role: Role;
+
+  @IsString()
+  @IsNotEmpty({ message: 'First name is required' })
+  firstName: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Last name is required' })
+  lastName: string;
 }

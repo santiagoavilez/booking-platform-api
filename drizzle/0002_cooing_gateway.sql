@@ -1,4 +1,7 @@
-CREATE TYPE "public"."role" AS ENUM('CLIENT', 'PROFESSIONAL');--> statement-breakpoint
+-- Drop existing users table and recreate with correct column order
+-- WARNING: This will delete all existing user data (acceptable in development)
+DROP TABLE IF EXISTS "users" CASCADE;--> statement-breakpoint
+
 CREATE TABLE "users" (
   "id" text PRIMARY KEY NOT NULL,
   "email" text NOT NULL UNIQUE,

@@ -49,6 +49,8 @@ export class AuthController {
         email: dto.email,
         password: dto.password,
         role: dto.role,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
       });
 
       return {

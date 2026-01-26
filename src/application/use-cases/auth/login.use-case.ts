@@ -37,6 +37,8 @@ export interface LoginOutput {
     id: string;
     email: string;
     role: string;
+    firstName: string;
+    lastName: string;
   };
 }
 
@@ -104,6 +106,8 @@ export class LoginUseCase {
         id: user.id,
         email: user.email,
         role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
       },
     };
   }

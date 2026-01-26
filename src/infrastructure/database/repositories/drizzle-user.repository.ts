@@ -33,6 +33,8 @@ export class DrizzleUserRepository implements IUserRepository {
         email: user.email,
         passwordHash: user.getPasswordHash(),
         role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
       })
       .returning();
 
@@ -70,6 +72,8 @@ export class DrizzleUserRepository implements IUserRepository {
       dbUser.email,
       dbUser.passwordHash,
       dbUser.role as Role, // Cast needed because pgEnum returns a specific type
+      dbUser.firstName,
+      dbUser.lastName,
     );
   }
 }

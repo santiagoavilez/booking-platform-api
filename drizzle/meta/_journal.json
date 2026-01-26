@@ -15,6 +15,13 @@
       "when": 1769180240367,
       "tag": "0001_absurd_johnny_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769384781543,
+      "tag": "0002_cooing_gateway",
+      "breakpoints": true
     }
   ]
 }

@@ -41,6 +41,8 @@ export interface RegisterUserInput {
   email: string;
   password: string;
   role: Role;
+  firstName: string;
+  lastName: string;
 }
 
 /**
@@ -78,7 +80,14 @@ export class RegisterUserUseCase {
     const userId = this.idGenerator.generate();
 
     // 4. Create domain entity
-    const user = new User(userId, input.email, passwordHash, input.role);
+    const user = new User(
+      userId,
+      input.email,
+      passwordHash,
+      input.role,
+      input.firstName,
+      input.lastName,
+    );
 
     // 5. Persist using repository (interface, implementation in Infrastructure)
     await this.userRepository.create(user);

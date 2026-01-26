@@ -34,6 +34,8 @@ export interface RefreshTokenOutput {
     id: string;
     email: string;
     role: string;
+    firstName: string;
+    lastName: string;
   };
 }
 
@@ -54,8 +56,9 @@ export class RefreshTokenUseCase {
 
   async execute(input: RefreshTokenInput): Promise<RefreshTokenOutput> {
     // 1. Find refresh token
-    const refreshTokenEntity =
-      await this.refreshTokenRepository.findByToken(input.refreshToken);
+    const refreshTokenEntity = await this.refreshTokenRepository.findByToken(
+      input.refreshToken,
+    );
 
     if (!refreshTokenEntity) {
       throw new Error('Invalid refresh token');
@@ -67,9 +70,7 @@ export class RefreshTokenUseCase {
     }
 
     // 3. Find user
-    const user = await this.userRepository.findById(
-      refreshTokenEntity.userId,
-    );
+    const user = await this.userRepository.findById(refreshTokenEntity.userId);
 
     if (!user) {
       throw new Error('User not found');
@@ -109,6 +110,8 @@ export class RefreshTokenUseCase {
         id: user.id,
         email: user.email,
         role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
       },
     };
   }
