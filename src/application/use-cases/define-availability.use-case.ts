@@ -1,18 +1,35 @@
 // src/application/use-cases/define-availability.use-case.ts
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Availability } from '../../domain/entities/availability.entity';
 import { type IAvailabilityRepository } from '../../domain/repositories/availability.repository';
 import { type IUserRepository } from '../../domain/repositories/user.repository';
+import { type IIdGenerator } from '../../domain/services/id-generator.interface';
+import {
+  AVAILABILITY_REPOSITORY,
+  USER_REPOSITORY,
+  ID_GENERATOR,
+} from '../../interfaces/providers';
 
 /**
  * ARCHITECTURAL DECISION:
  * - What: Use case for defining weekly availability of professionals
- * - Why: Centralizes business validations (overlaps, format, etc.)
+ * - Why: Orchestrates the business flow without containing business logic
  * - Responsibilities:
  *   - Validate that user is a professional
- *   - Validate that there are no schedule overlaps
- *   - Create multiple availability slots
+ *   - Create domain entities (which validate themselves)
+ *   - Delegate overlap validation to domain
+ *   - Persist through repository interface
+ *
+ * CLEAN ARCHITECTURE:
+ * - Depends ONLY on Domain interfaces (IAvailabilityRepository, IUserRepository, IIdGenerator)
+ * - Does NOT know concrete implementations
+ * - Business logic (validation) is in Domain layer (Availability entity)
+ * - Implementations are injected via Dependency Injection
+ *
+ * SOLID - Single Responsibility:
+ * - This use case ONLY orchestrates the flow
+ * - Validation logic is delegated to domain entities
  */
 export interface AvailabilitySlotInput {
   dayOfWeek: number; // 0-6 (Sunday-Saturday)
@@ -32,8 +49,12 @@ export interface DefineAvailabilityOutput {
 @Injectable()
 export class DefineAvailabilityUseCase {
   constructor(
+    @Inject(AVAILABILITY_REPOSITORY)
     private readonly availabilityRepository: IAvailabilityRepository,
+    @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
+    @Inject(ID_GENERATOR)
+    private readonly idGenerator: IIdGenerator,
   ) {}
 
   async execute(
@@ -53,40 +74,25 @@ export class DefineAvailabilityUseCase {
       input.professionalId,
     );
 
-    // 3. Validate and create availability slots
-    const availabilitySlots: Availability[] = [];
-    for (const slot of input.slots) {
-      // Validate day format (0-6)
-      if (slot.dayOfWeek < 0 || slot.dayOfWeek > 6) {
-        throw new Error(`Invalid day of week: ${slot.dayOfWeek}`);
-      }
-
-      // Validate time format (HH:mm)
-      if (
-        !this.isValidTimeFormat(slot.startTime) ||
-        !this.isValidTimeFormat(slot.endTime)
-      ) {
-        throw new Error('Invalid time format. Use HH:mm');
-      }
-
-      // Validate that startTime < endTime
-      if (slot.startTime >= slot.endTime) {
-        throw new Error(`Invalid time range for day ${slot.dayOfWeek}`);
-      }
-
-      // Create domain entity
-      const availability = new Availability(
+    // 3. Create domain entities for each slot
+    // The Availability entity validates:
+    // - Day of week range (0-6)
+    // - Time format (HH:mm) via Time VO
+    // - Time range (startTime < endTime)
+    const availabilitySlots: Availability[] = input.slots.map((slot) => {
+      const id = this.idGenerator.generate();
+      return new Availability(
+        id,
         input.professionalId,
         slot.dayOfWeek,
         slot.startTime,
         slot.endTime,
       );
+    });
 
-      availabilitySlots.push(availability);
-    }
-
-    // 4. Validate overlaps within new slots
-    this.validateNoOverlaps(availabilitySlots);
+    // 4. Validate no overlaps using domain logic
+    // This validation is in the domain because it's a business rule
+    Availability.validateNoOverlaps(availabilitySlots);
 
     // 5. Persist all slots
     await this.availabilityRepository.createMany(availabilitySlots);
@@ -94,44 +100,5 @@ export class DefineAvailabilityUseCase {
     return {
       createdSlots: availabilitySlots.length,
     };
-  }
-
-  /**
-   * Validates that there are no overlaps between slots of the same day
-   */
-  private validateNoOverlaps(slots: Availability[]): void {
-    // Group by day
-    const slotsByDay = new Map<number, Availability[]>();
-    for (const slot of slots) {
-      if (!slotsByDay.has(slot.dayOfWeek)) {
-        slotsByDay.set(slot.dayOfWeek, []);
-      }
-      slotsByDay.get(slot.dayOfWeek)!.push(slot);
-    }
-
-    // Validate overlaps by day
-    for (const [day, daySlots] of slotsByDay.entries()) {
-      // Sort by start time
-      const sortedSlots = daySlots.sort((a, b) =>
-        a.startTime.localeCompare(b.startTime),
-      );
-
-      // Verify that each slot does not overlap with the next one
-      for (let i = 0; i < sortedSlots.length - 1; i++) {
-        const current = sortedSlots[i];
-        const next = sortedSlots[i + 1];
-
-        if (current.endTime > next.startTime) {
-          throw new Error(
-            `Overlapping availability slots on day ${day}: ${current.startTime}-${current.endTime} overlaps with ${next.startTime}-${next.endTime}`,
-          );
-        }
-      }
-    }
-  }
-
-  private isValidTimeFormat(time: string): boolean {
-    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-    return timeRegex.test(time);
   }
 }

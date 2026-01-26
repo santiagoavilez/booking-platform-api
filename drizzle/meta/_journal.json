@@ -22,6 +22,13 @@
       "when": 1769384781543,
       "tag": "0002_cooing_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769389934788,
+      "tag": "0003_wealthy_true_believers",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { RegisterUserUseCase } from './application/use-cases/auth/register-user.use-case';
 import { LoginUseCase } from './application/use-cases/auth/login.use-case';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case';
+import { DefineAvailabilityUseCase } from './application/use-cases/define-availability.use-case';
 import {
   drizzleClientProvider,
   userRepositoryProvider,
@@ -12,9 +13,13 @@ import {
   idGeneratorProvider,
   jwtConfigProvider,
   jwtTokenGeneratorProvider,
+  jwtTokenVerifierProvider,
   refreshTokenRepositoryProvider,
+  availabilityRepositoryProvider,
 } from './interfaces/providers';
 import { AuthController } from './interfaces/http/controllers/auth.controller';
+import { AvailabilityController } from './interfaces/http/controllers/availability.controller';
+import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -22,7 +27,7 @@ import { AuthController } from './interfaces/http/controllers/auth.controller';
       isGlobal: true,
     }),
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController, AuthController, AvailabilityController],
   providers: [
     AppService,
     // Database
@@ -30,16 +35,21 @@ import { AuthController } from './interfaces/http/controllers/auth.controller';
     // Repositories
     userRepositoryProvider,
     refreshTokenRepositoryProvider,
+    availabilityRepositoryProvider,
     // Configuration
     jwtConfigProvider,
     // Services
     passwordHasherProvider,
     idGeneratorProvider,
     jwtTokenGeneratorProvider,
+    jwtTokenVerifierProvider,
+    // Guards
+    JwtAuthGuard,
     // Use Cases
     RegisterUserUseCase,
     LoginUseCase,
     RefreshTokenUseCase,
+    DefineAvailabilityUseCase,
   ],
 })
 export class AppModule {}
