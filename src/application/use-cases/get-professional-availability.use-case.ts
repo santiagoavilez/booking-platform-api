@@ -43,6 +43,10 @@ export interface GetProfessionalAvailabilityInput {
 
 export interface GetProfessionalAvailabilityOutput {
   availabilities: Availability[];
+  professional: {
+    firstName: string;
+    lastName: string;
+  };
 }
 
 @Injectable()
@@ -75,6 +79,10 @@ export class GetProfessionalAvailabilityUseCase {
 
     return {
       availabilities,
+      professional: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
     };
   }
 }

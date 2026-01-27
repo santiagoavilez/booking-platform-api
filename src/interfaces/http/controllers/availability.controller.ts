@@ -15,8 +15,14 @@ import {
   Param,
 } from '@nestjs/common';
 import { DefineAvailabilityUseCase } from '../../../application/use-cases/define-availability.use-case';
-import { GetMyAvailabilityUseCase } from '../../../application/use-cases/get-my-availability.use-case';
-import { GetProfessionalAvailabilityUseCase } from '../../../application/use-cases/get-professional-availability.use-case';
+import {
+  GetMyAvailabilityUseCase,
+  type GetMyAvailabilityOutput,
+} from '../../../application/use-cases/get-my-availability.use-case';
+import {
+  GetProfessionalAvailabilityUseCase,
+  type GetProfessionalAvailabilityOutput,
+} from '../../../application/use-cases/get-professional-availability.use-case';
 import { DefineAvailabilityDto } from '../dto/define-availability.dto';
 import { AvailabilitySlotResponseDto } from '../dto/get-availability-response.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
@@ -134,9 +140,10 @@ export class AvailabilityController {
       const professionalId = authenticatedReq.user.userId;
 
       // Call use case to retrieve availability
-      const result = await this.getMyAvailabilityUseCase.execute({
-        professionalId,
-      });
+      const result: GetMyAvailabilityOutput =
+        await this.getMyAvailabilityUseCase.execute({
+          professionalId,
+        });
 
       // Transform domain entities to response DTO
       const availabilities: AvailabilitySlotResponseDto[] =
@@ -147,10 +154,17 @@ export class AvailabilityController {
           endTime: availability.endTime,
         }));
 
+      // Extract professional information
+      const { professional } = result;
+
       return {
         success: true,
         data: {
           availabilities,
+          professional: {
+            firstName: professional.firstName,
+            lastName: professional.lastName,
+          },
         },
       };
     } catch (error) {
@@ -189,9 +203,10 @@ export class AvailabilityController {
   ) {
     try {
       // Call use case to retrieve availability
-      const result = await this.getProfessionalAvailabilityUseCase.execute({
-        professionalId,
-      });
+      const result: GetProfessionalAvailabilityOutput =
+        await this.getProfessionalAvailabilityUseCase.execute({
+          professionalId,
+        });
 
       // Transform domain entities to response DTO
       const availabilities: AvailabilitySlotResponseDto[] =
@@ -202,10 +217,17 @@ export class AvailabilityController {
           endTime: availability.endTime,
         }));
 
+      // Extract professional information
+      const { professional } = result;
+
       return {
         success: true,
         data: {
           availabilities,
+          professional: {
+            firstName: professional.firstName,
+            lastName: professional.lastName,
+          },
         },
       };
     } catch (error) {

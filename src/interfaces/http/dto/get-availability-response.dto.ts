@@ -17,3 +17,19 @@ export class AvailabilitySlotResponseDto {
   startTime: string; // HH:mm
   endTime: string; // HH:mm
 }
+
+/**
+ * ARCHITECTURAL DECISION:
+ * - What: DTO for professional information in availability responses
+ * - Why: Provides professional identification data along with availability slots
+ * - Structure: Contains only public information (firstName, lastName)
+ *
+ * CLEAN ARCHITECTURE:
+ * - Is in Interfaces layer (HTTP adapter)
+ * - Transforms domain entities to HTTP response format
+ * - Does not contain business logic
+ */
+export class ProfessionalInfoDto {
+  firstName: string;
+  lastName: string;
+}
