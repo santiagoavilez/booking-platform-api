@@ -3,16 +3,20 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   HttpCode,
   HttpStatus,
   BadRequestException,
   ForbiddenException,
+  NotFoundException,
   UseGuards,
   Req,
 } from '@nestjs/common';
 import { DefineAvailabilityUseCase } from '../../../application/use-cases/define-availability.use-case';
+import { GetMyAvailabilityUseCase } from '../../../application/use-cases/get-my-availability.use-case';
 import { DefineAvailabilityDto } from '../dto/define-availability.dto';
+import { AvailabilitySlotResponseDto } from '../dto/get-availability-response.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
 
@@ -37,6 +41,7 @@ import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
 export class AvailabilityController {
   constructor(
     private readonly defineAvailabilityUseCase: DefineAvailabilityUseCase,
+    private readonly getMyAvailabilityUseCase: GetMyAvailabilityUseCase,
   ) {}
 
   /**
@@ -105,6 +110,62 @@ export class AvailabilityController {
 
       // Unexpected error
       throw new BadRequestException('Failed to define availability');
+    }
+  }
+
+  /**
+   * Endpoint to retrieve weekly availability for the authenticated professional
+   * GET /availability/me
+   *
+   * The professionalId is extracted from the JWT token
+   * Only professionals can retrieve their availability
+   *
+   * @param req - Authenticated request with user info from JWT
+   * @returns Array of availability slots
+   */
+  @Get('me')
+  async getMyAvailability(@Req() req: any) {
+    try {
+      // Get professionalId from authenticated user (JWT token)
+      const authenticatedReq = req as AuthenticatedRequest;
+      const professionalId = authenticatedReq.user.userId;
+
+      // Call use case to retrieve availability
+      const result = await this.getMyAvailabilityUseCase.execute({
+        professionalId,
+      });
+
+      // Transform domain entities to response DTO
+      const availabilities: AvailabilitySlotResponseDto[] =
+        result.availabilities.map((availability) => ({
+          id: availability.id,
+          dayOfWeek: availability.dayOfWeek,
+          startTime: availability.startTime,
+          endTime: availability.endTime,
+        }));
+
+      return {
+        success: true,
+        data: {
+          availabilities,
+        },
+      };
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+
+      // Map domain errors to HTTP responses
+      if (errorMessage === 'User not found') {
+        throw new NotFoundException('User not found');
+      }
+
+      if (errorMessage === 'User is not a professional') {
+        throw new ForbiddenException(
+          'Only professionals can retrieve availability',
+        );
+      }
+
+      // Unexpected error
+      throw new BadRequestException('Failed to retrieve availability');
     }
   }
 }
