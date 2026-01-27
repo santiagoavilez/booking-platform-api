@@ -7,6 +7,7 @@ import { LoginUseCase } from './application/use-cases/auth/login.use-case';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case';
 import { DefineAvailabilityUseCase } from './application/use-cases/define-availability.use-case';
 import { GetMyAvailabilityUseCase } from './application/use-cases/get-my-availability.use-case';
+import { GetProfessionalAvailabilityUseCase } from './application/use-cases/get-professional-availability.use-case';
 import {
   drizzleClientProvider,
   userRepositoryProvider,
@@ -52,6 +53,7 @@ import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
     RefreshTokenUseCase,
     DefineAvailabilityUseCase,
     GetMyAvailabilityUseCase,
+    GetProfessionalAvailabilityUseCase,
   ],
 })
 export class AppModule {}

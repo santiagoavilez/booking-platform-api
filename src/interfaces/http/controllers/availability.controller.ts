@@ -12,9 +12,11 @@ import {
   NotFoundException,
   UseGuards,
   Req,
+  Param,
 } from '@nestjs/common';
 import { DefineAvailabilityUseCase } from '../../../application/use-cases/define-availability.use-case';
 import { GetMyAvailabilityUseCase } from '../../../application/use-cases/get-my-availability.use-case';
+import { GetProfessionalAvailabilityUseCase } from '../../../application/use-cases/get-professional-availability.use-case';
 import { DefineAvailabilityDto } from '../dto/define-availability.dto';
 import { AvailabilitySlotResponseDto } from '../dto/get-availability-response.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
@@ -42,6 +44,7 @@ export class AvailabilityController {
   constructor(
     private readonly defineAvailabilityUseCase: DefineAvailabilityUseCase,
     private readonly getMyAvailabilityUseCase: GetMyAvailabilityUseCase,
+    private readonly getProfessionalAvailabilityUseCase: GetProfessionalAvailabilityUseCase,
   ) {}
 
   /**
@@ -161,6 +164,61 @@ export class AvailabilityController {
       if (errorMessage === 'User is not a professional') {
         throw new ForbiddenException(
           'Only professionals can retrieve availability',
+        );
+      }
+
+      // Unexpected error
+      throw new BadRequestException('Failed to retrieve availability');
+    }
+  }
+
+  /**
+   * Endpoint to retrieve weekly availability for a specific professional
+   * GET /availability/:professionalId
+   *
+   * The professionalId is extracted from the URL parameter
+   * Any authenticated user can query any professional's availability
+   * Only professionals can have availability (validated in use case)
+   *
+   * @param professionalId - The ID of the professional whose availability is being queried
+   * @returns Array of availability slots
+   */
+  @Get(':professionalId')
+  async getProfessionalAvailability(
+    @Param('professionalId') professionalId: string,
+  ) {
+    try {
+      // Call use case to retrieve availability
+      const result = await this.getProfessionalAvailabilityUseCase.execute({
+        professionalId,
+      });
+
+      // Transform domain entities to response DTO
+      const availabilities: AvailabilitySlotResponseDto[] =
+        result.availabilities.map((availability) => ({
+          id: availability.id,
+          dayOfWeek: availability.dayOfWeek,
+          startTime: availability.startTime,
+          endTime: availability.endTime,
+        }));
+
+      return {
+        success: true,
+        data: {
+          availabilities,
+        },
+      };
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+
+      // Map domain errors to HTTP responses
+      if (errorMessage === 'User not found') {
+        throw new NotFoundException('User not found');
+      }
+
+      if (errorMessage === 'User is not a professional') {
+        throw new BadRequestException(
+          'The requested user is not a professional',
         );
       }
 
