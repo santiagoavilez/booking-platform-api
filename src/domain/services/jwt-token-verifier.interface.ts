@@ -29,4 +29,3 @@ export interface IJwtTokenVerifier {
    */
   verify(token: string): Promise<JwtPayload>;
 }
-

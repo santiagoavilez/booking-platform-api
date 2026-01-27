@@ -53,4 +53,3 @@ export class JwtTokenVerifier implements IJwtTokenVerifier {
     }
   }
 }
-
