@@ -16,6 +16,7 @@ import type { IPasswordHasher } from '../../../domain/services/password-hasher.i
 import type { IIdGenerator } from '../../../domain/services/id-generator.interface';
 import type { JwtConfig } from '../../../interfaces/providers/config.providers';
 import { RefreshToken } from '../../../domain/entities/refresh-token.entity';
+import { calculateRefreshTokenExpiration } from '../../../shared/utils/token-expiration.utils';
 
 /**
  * ARCHITECTURAL DECISION:
@@ -84,7 +85,9 @@ export class LoginUseCase {
     // 4. Generate refresh token
     const refreshTokenId = this.idGenerator.generate();
     const refreshTokenValue = this.idGenerator.generate();
-    const refreshTokenExpiresAt = this.calculateRefreshTokenExpiration();
+    const refreshTokenExpiresAt = calculateRefreshTokenExpiration(
+      this.jwtConfig.refreshTokenExpirationTime,
+    );
 
     const refreshTokenEntity = new RefreshToken(
       refreshTokenId,
@@ -110,46 +113,5 @@ export class LoginUseCase {
         lastName: user.lastName,
       },
     };
-  }
-
-  /**
-   * Calculates refresh token expiration date based on configuration
-   */
-  private calculateRefreshTokenExpiration(): Date {
-    const expirationTime = this.parseExpirationTime(
-      this.jwtConfig.refreshTokenExpirationTime,
-    );
-    const expirationDate = new Date();
-    expirationDate.setTime(expirationDate.getTime() + expirationTime * 1000);
-    return expirationDate;
-  }
-
-  /**
-   * Parses expiration time string (e.g., "7d", "24h", "3600s") to seconds
-   */
-  private parseExpirationTime(expirationTime: string): number {
-    const timeStr = expirationTime.trim().toLowerCase();
-    const match = timeStr.match(/^(\d+)([smhd])$/);
-
-    if (!match) {
-      // Default to 7 days if format is invalid
-      return 7 * 24 * 60 * 60;
-    }
-
-    const value = parseInt(match[1], 10);
-    const unit = match[2];
-
-    switch (unit) {
-      case 's':
-        return value;
-      case 'm':
-        return value * 60;
-      case 'h':
-        return value * 60 * 60;
-      case 'd':
-        return value * 24 * 60 * 60;
-      default:
-        return 7 * 24 * 60 * 60; // Default to 7 days
-    }
   }
 }
