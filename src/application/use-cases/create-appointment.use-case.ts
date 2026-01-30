@@ -5,6 +5,7 @@ import { Appointment } from '../../domain/entities/appointment.entity';
 import { type IAppointmentRepository } from '../../domain/repositories/appointment.repository';
 import { type IAvailabilityRepository } from '../../domain/repositories/availability.repository';
 import { type IUserRepository } from '../../domain/repositories/user.repository';
+import { EnsureProfessionalExistsUseCase } from './ensure-professional-exists.use-case';
 
 /**
  * ARCHITECTURAL DECISION:
@@ -39,18 +40,14 @@ export class CreateAppointmentUseCase {
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly availabilityRepository: IAvailabilityRepository,
     private readonly userRepository: IUserRepository,
+    private readonly ensureProfessionalExistsUseCase: EnsureProfessionalExistsUseCase,
   ) {}
 
   async execute(
     input: CreateAppointmentInput,
   ): Promise<CreateAppointmentOutput> {
-    // 1. Validate that professional exists
-    const professional = await this.userRepository.findById(
-      input.professionalId,
-    );
-    if (!professional || !professional.isProfessional()) {
-      throw new Error('Professional not found');
-    }
+    // 1. Validate that professional exists (DRY: shared use case)
+    await this.ensureProfessionalExistsUseCase.execute(input.professionalId);
 
     // 2. Validate that client exists
     const client = await this.userRepository.findById(input.clientId);

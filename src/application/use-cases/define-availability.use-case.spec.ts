@@ -27,8 +27,8 @@ import {
   DefineAvailabilityInput,
   DefineAvailabilityOutput,
 } from './define-availability.use-case';
+import { EnsureProfessionalExistsUseCase } from './ensure-professional-exists.use-case';
 import { IAvailabilityRepository } from '../../domain/repositories/availability.repository';
-import { IUserRepository } from '../../domain/repositories/user.repository';
 import { IIdGenerator } from '../../domain/services/id-generator.interface';
 import { User } from '../../domain/entities/user.entity';
 import { Availability } from '../../domain/entities/availability.entity';
@@ -41,7 +41,7 @@ import { Role } from '../../domain/enums/role.enum';
  *
  * For DefineAvailabilityUseCase, we mock:
  * - IAvailabilityRepository: to simulate database operations (delete, createMany)
- * - IUserRepository: to simulate user lookup
+ * - EnsureProfessionalExistsUseCase: to simulate "user exists and is professional" validation
  * - IIdGenerator: to simulate ID generation for availability slots
  *
  * jest.fn() creates a "spy function" that:
@@ -66,7 +66,7 @@ describe('DefineAvailabilityUseCase', () => {
    * This gives us autocomplete and type safety
    */
   let mockAvailabilityRepository: jest.Mocked<IAvailabilityRepository>;
-  let mockUserRepository: jest.Mocked<IUserRepository>;
+  let mockEnsureProfessionalExistsUseCase: jest.Mocked<EnsureProfessionalExistsUseCase>;
   let mockIdGenerator: jest.Mocked<IIdGenerator>;
 
   /**
@@ -80,7 +80,9 @@ describe('DefineAvailabilityUseCase', () => {
    * By storing jest.fn() in separate variables, we avoid this warning because
    * we're passing a standalone function reference, not an object method.
    */
-  let mockFindById: jest.MockedFunction<IUserRepository['findById']>;
+  let mockEnsureExecute: jest.MockedFunction<
+    EnsureProfessionalExistsUseCase['execute']
+  >;
   let mockDeleteByProfessionalId: jest.MockedFunction<
     IAvailabilityRepository['deleteByProfessionalId']
   >;
@@ -166,17 +168,15 @@ describe('DefineAvailabilityUseCase', () => {
      */
 
     // Create individual mock functions first
-    mockFindById = jest.fn();
+    mockEnsureExecute = jest.fn();
     mockDeleteByProfessionalId = jest.fn().mockResolvedValue(undefined);
     mockCreateMany = jest.fn();
     mockGenerate = jest.fn();
 
-    // Mock of UserRepository
-    mockUserRepository = {
-      findById: mockFindById,
-      findByEmail: jest.fn(),
-      create: jest.fn(),
-    };
+    // Mock of EnsureProfessionalExistsUseCase
+    mockEnsureProfessionalExistsUseCase = {
+      execute: mockEnsureExecute,
+    } as unknown as jest.Mocked<EnsureProfessionalExistsUseCase>;
 
     // Mock of AvailabilityRepository
     mockAvailabilityRepository = {
@@ -206,7 +206,7 @@ describe('DefineAvailabilityUseCase', () => {
      */
     defineAvailabilityUseCase = new DefineAvailabilityUseCase(
       mockAvailabilityRepository,
-      mockUserRepository,
+      mockEnsureProfessionalExistsUseCase,
       mockIdGenerator,
     );
   });
@@ -244,7 +244,7 @@ describe('DefineAvailabilityUseCase', () => {
        * mockResolvedValue: For async functions that return Promises
        * The value we pass is what will be returned when the method is called
        */
-      mockFindById.mockResolvedValue(testProfessional);
+      mockEnsureExecute.mockResolvedValue(testProfessional);
 
       // Mock createMany to return the created availabilities
       const mockCreatedAvailabilities = slotsInput.map((slot, index) => {
@@ -285,9 +285,9 @@ describe('DefineAvailabilityUseCase', () => {
        * correctly with its dependencies
        */
 
-      // Verify user lookup
-      expect(mockFindById).toHaveBeenCalledTimes(1);
-      expect(mockFindById).toHaveBeenCalledWith(testProfessionalId);
+      // Verify professional validation (EnsureProfessionalExistsUseCase)
+      expect(mockEnsureExecute).toHaveBeenCalledTimes(1);
+      expect(mockEnsureExecute).toHaveBeenCalledWith(testProfessionalId);
 
       // Verify existing availability was deleted (replaced completely)
       expect(mockDeleteByProfessionalId).toHaveBeenCalledTimes(1);
@@ -320,10 +320,10 @@ describe('DefineAvailabilityUseCase', () => {
       };
 
       /**
-       * Configure the mock to return null
-       * This simulates that the user doesn't exist in the database
+       * Configure the mock to throw (user not found)
+       * EnsureProfessionalExistsUseCase throws when user doesn't exist
        */
-      mockFindById.mockResolvedValue(null);
+      mockEnsureExecute.mockRejectedValue(new Error('User not found'));
 
       // ========== ACT & ASSERT ==========
       /**
@@ -360,8 +360,10 @@ describe('DefineAvailabilityUseCase', () => {
         slots: slotsInput,
       };
 
-      // User exists but is a CLIENT, not a PROFESSIONAL
-      mockFindById.mockResolvedValue(testClient);
+      // EnsureProfessionalExistsUseCase throws when user is not a professional
+      mockEnsureExecute.mockRejectedValue(
+        new Error('User is not a professional'),
+      );
 
       // ========== ACT & ASSERT ==========
       await expect(defineAvailabilityUseCase.execute(input)).rejects.toThrow(
@@ -391,7 +393,7 @@ describe('DefineAvailabilityUseCase', () => {
         slots: slotsInput,
       };
 
-      mockFindById.mockResolvedValue(testProfessional);
+      mockEnsureExecute.mockResolvedValue(testProfessional);
       mockCreateMany.mockResolvedValue([]);
 
       // ========== ACT ==========
@@ -426,7 +428,7 @@ describe('DefineAvailabilityUseCase', () => {
         slots: [], // Empty array
       };
 
-      mockFindById.mockResolvedValue(testProfessional);
+      mockEnsureExecute.mockResolvedValue(testProfessional);
       mockCreateMany.mockResolvedValue([]);
 
       // ========== ACT ==========
@@ -466,7 +468,7 @@ describe('DefineAvailabilityUseCase', () => {
         slots: overlappingSlots,
       };
 
-      mockFindById.mockResolvedValue(testProfessional);
+      mockEnsureExecute.mockResolvedValue(testProfessional);
 
       // ========== ACT & ASSERT ==========
       /**
@@ -502,7 +504,7 @@ describe('DefineAvailabilityUseCase', () => {
         slots: singleSlot,
       };
 
-      mockFindById.mockResolvedValue(testProfessional);
+      mockEnsureExecute.mockResolvedValue(testProfessional);
       const mockCreatedAvailability = new Availability(
         'availability-id-1',
         testProfessionalId,
@@ -543,7 +545,7 @@ describe('DefineAvailabilityUseCase', () => {
         slots: slotsInput,
       };
 
-      mockFindById.mockResolvedValue(testProfessional);
+      mockEnsureExecute.mockResolvedValue(testProfessional);
       mockCreateMany.mockResolvedValue([]);
 
       // ========== ACT ==========

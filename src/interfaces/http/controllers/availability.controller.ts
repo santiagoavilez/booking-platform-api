@@ -125,7 +125,19 @@ export class AvailabilityController {
    * Only professionals can retrieve their availability
    *
    * @param req - Authenticated request with user info from JWT
-   * @returns Array of availability slots
+   * @returns Array of availability slots and professional information
+   * @example
+   * GET /availability/me
+   * {
+   *   "success": true,
+   *   "data": {
+   *     "availabilities": [...],
+   *     "professional": {
+   *       "firstName": "John",
+   *       "lastName": "Doe"
+   *     }
+   *   }
+   * }
    */
   @Get('me')
   async getMyAvailability(@Req() req: any) {
@@ -190,7 +202,19 @@ export class AvailabilityController {
    * Only professionals can have availability (validated in use case)
    *
    * @param professionalId - The ID of the professional whose availability is being queried
-   * @returns Array of availability slots
+   * @returns Array of availability slots and professional information
+   * @example
+   * GET /availability/123
+   * {
+   *   "success": true,
+   *   "data": {
+   *     "availabilities": [...],
+   *     "professional": {
+   *       "firstName": "John",
+   *       "lastName": "Doe"
+   *     }
+   *   }
+   * }
    */
   @Get(':professionalId')
   async getProfessionalAvailability(

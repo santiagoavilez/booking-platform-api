@@ -3,11 +3,10 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Availability } from '../../domain/entities/availability.entity';
 import { type IAvailabilityRepository } from '../../domain/repositories/availability.repository';
-import { type IUserRepository } from '../../domain/repositories/user.repository';
 import { type IIdGenerator } from '../../domain/services/id-generator.interface';
+import { EnsureProfessionalExistsUseCase } from './ensure-professional-exists.use-case';
 import {
   AVAILABILITY_REPOSITORY,
-  USER_REPOSITORY,
   ID_GENERATOR,
 } from '../../interfaces/providers';
 
@@ -51,8 +50,7 @@ export class DefineAvailabilityUseCase {
   constructor(
     @Inject(AVAILABILITY_REPOSITORY)
     private readonly availabilityRepository: IAvailabilityRepository,
-    @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
+    private readonly ensureProfessionalExistsUseCase: EnsureProfessionalExistsUseCase,
     @Inject(ID_GENERATOR)
     private readonly idGenerator: IIdGenerator,
   ) {}
@@ -60,14 +58,8 @@ export class DefineAvailabilityUseCase {
   async execute(
     input: DefineAvailabilityInput,
   ): Promise<DefineAvailabilityOutput> {
-    // 1. Validate that user exists and is a professional
-    const user = await this.userRepository.findById(input.professionalId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-    if (!user.isProfessional()) {
-      throw new Error('User is not a professional');
-    }
+    // 1. Validate that user exists and is a professional (DRY: shared use case)
+    await this.ensureProfessionalExistsUseCase.execute(input.professionalId);
 
     // 2. Delete existing availability (replace completely)
     await this.availabilityRepository.deleteByProfessionalId(

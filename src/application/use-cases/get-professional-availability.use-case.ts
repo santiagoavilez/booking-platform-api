@@ -3,11 +3,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Availability } from '../../domain/entities/availability.entity';
 import { type IAvailabilityRepository } from '../../domain/repositories/availability.repository';
-import { type IUserRepository } from '../../domain/repositories/user.repository';
-import {
-  AVAILABILITY_REPOSITORY,
-  USER_REPOSITORY,
-} from '../../interfaces/providers';
+import { EnsureProfessionalExistsUseCase } from './ensure-professional-exists.use-case';
+import { AVAILABILITY_REPOSITORY } from '../../interfaces/providers';
 
 /**
  * ARCHITECTURAL DECISION:
@@ -36,7 +33,7 @@ import {
  * SECURITY:
  * - This use case does NOT validate authentication (handled by JWT guard in controller)
  * - Any authenticated user can query any professional's availability
- * - Only validates that the queried user exists and is a professional
+ * - Only validates that the queried user exists and is a professional (via EnsureProfessionalExistsUseCase)
  */
 export interface GetProfessionalAvailabilityInput {
   professionalId: string;
@@ -55,22 +52,16 @@ export class GetProfessionalAvailabilityUseCase {
   constructor(
     @Inject(AVAILABILITY_REPOSITORY)
     private readonly availabilityRepository: IAvailabilityRepository,
-    @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
+    private readonly ensureProfessionalExistsUseCase: EnsureProfessionalExistsUseCase,
   ) {}
 
   async execute(
     input: GetProfessionalAvailabilityInput,
   ): Promise<GetProfessionalAvailabilityOutput> {
-    // 1. Validate that user exists and is a professional
-    // This validation ensures only professionals can have availability
-    const user = await this.userRepository.findById(input.professionalId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-    if (!user.isProfessional()) {
-      throw new Error('User is not a professional');
-    }
+    // 1. Validate that user exists and is a professional (DRY: shared use case)
+    const user = await this.ensureProfessionalExistsUseCase.execute(
+      input.professionalId,
+    );
 
     // 2. Fetch availability slots from repository
     const availabilities =
