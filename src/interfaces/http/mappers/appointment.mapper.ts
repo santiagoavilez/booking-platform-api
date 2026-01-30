@@ -11,7 +11,10 @@ import type { Appointment } from '../../../domain/entities/appointment.entity';
  * - Date/time: API uses date (YYYY-MM-DD) + startTime/endTime (HH:mm); domain uses Date (stored as UTC)
  */
 
-/** Response shape for appointment: same as frontend sends (date + times), for consistent UI consumption */
+/**
+ * Response shape for appointment: date + times + audit fields.
+ * Matches frontend consumption; createdAt/updatedAt when loaded from DB.
+ */
 export interface AppointmentResponseDto {
   id: string;
   professionalId: string;
@@ -19,6 +22,8 @@ export interface AppointmentResponseDto {
   date: string;
   startTime: string;
   endTime: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /**
@@ -46,7 +51,7 @@ export function toCreateAppointmentInput(
 export function toAppointmentResponseDto(
   appointment: Appointment,
 ): AppointmentResponseDto {
-  return {
+  const dto: AppointmentResponseDto = {
     id: appointment.id,
     professionalId: appointment.professionalId,
     clientId: appointment.clientId,
@@ -54,6 +59,13 @@ export function toAppointmentResponseDto(
     startTime: formatTimeUtc(appointment.startsAt),
     endTime: formatTimeUtc(appointment.endsAt),
   };
+  if (appointment.createdAt != null) {
+    dto.createdAt = appointment.createdAt.toISOString();
+  }
+  if (appointment.updatedAt != null) {
+    dto.updatedAt = appointment.updatedAt.toISOString();
+  }
+  return dto;
 }
 
 function parseDateAndTimeAsUtc(date: string, time: string): Date {

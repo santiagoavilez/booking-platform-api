@@ -6,6 +6,8 @@ import {
   Get,
   Body,
   Req,
+  Param,
+  Query,
   HttpCode,
   HttpStatus,
   BadRequestException,
@@ -14,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { CreateAppointmentUseCase } from '../../../application/use-cases/create-appointment.use-case';
 import { GetMyAppointmentsUseCase } from '../../../application/use-cases/get-my-appointments.use-case';
+import { GetAppointmentsByProfessionalAndDateUseCase } from '../../../application/use-cases/get-appointments-by-professional-and-date.use-case';
 import { CreateAppointmentDto } from '../dto/create-appointment.dto';
 import {
   toCreateAppointmentInput,
@@ -39,6 +42,7 @@ export class AppointmentController {
   constructor(
     private readonly createAppointmentUseCase: CreateAppointmentUseCase,
     private readonly getMyAppointmentsUseCase: GetMyAppointmentsUseCase,
+    private readonly getAppointmentsByProfessionalAndDateUseCase: GetAppointmentsByProfessionalAndDateUseCase,
   ) {}
 
   /**
@@ -124,12 +128,38 @@ export class AppointmentController {
   /**
    * GET /appointments
    * Returns appointments for the authenticated user (as client).
-   * Response shape: { id, professionalId, clientId, date, startTime, endTime } (same as create response).
+   * Response shape: { id, professionalId, clientId, date, startTime, endTime, createdAt?, updatedAt? }.
    */
   @Get()
   async findMyAppointments(@Req() req: AuthenticatedRequest) {
     const clientId = req.user.userId;
     const appointments = await this.getMyAppointmentsUseCase.execute(clientId);
+    return {
+      success: true,
+      data: appointments.map(toAppointmentResponseDto),
+    };
+  }
+
+  /**
+   * GET /appointments/professional/:professionalId?date=YYYY-MM-DD
+   * Returns appointments for a professional on the given date (UTC).
+   * Response shape: array of { id, professionalId, clientId, date, startTime, endTime, createdAt, updatedAt }.
+   */
+  @Get('professional/:professionalId')
+  async findByProfessionalAndDate(
+    @Param('professionalId') professionalId: string,
+    @Query('date') date: string | undefined,
+  ) {
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new BadRequestException(
+        'Query parameter "date" is required and must be YYYY-MM-DD',
+      );
+    }
+    const appointments =
+      await this.getAppointmentsByProfessionalAndDateUseCase.execute(
+        professionalId,
+        date,
+      );
     return {
       success: true,
       data: appointments.map(toAppointmentResponseDto),

@@ -7,6 +7,7 @@ import { LoginUseCase } from './application/use-cases/auth/login.use-case';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case';
 import { CreateAppointmentUseCase } from './application/use-cases/create-appointment.use-case';
 import { GetMyAppointmentsUseCase } from './application/use-cases/get-my-appointments.use-case';
+import { GetAppointmentsByProfessionalAndDateUseCase } from './application/use-cases/get-appointments-by-professional-and-date.use-case';
 import { DefineAvailabilityUseCase } from './application/use-cases/define-availability.use-case';
 import { EnsureProfessionalExistsUseCase } from './application/use-cases/ensure-professional-exists.use-case';
 import { GetProfessionalAvailabilityUseCase } from './application/use-cases/get-professional-availability.use-case';
@@ -66,6 +67,7 @@ import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
     GetProfessionalAvailabilityUseCase,
     CreateAppointmentUseCase,
     GetMyAppointmentsUseCase,
+    GetAppointmentsByProfessionalAndDateUseCase,
   ],
 })
 export class AppModule {}

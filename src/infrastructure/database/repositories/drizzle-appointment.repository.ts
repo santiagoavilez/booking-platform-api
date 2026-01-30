@@ -1,7 +1,7 @@
 // src/infrastructure/database/repositories/drizzle-appointment.repository.ts
 
 import { Injectable } from '@nestjs/common';
-import { eq, and, lt, gt } from 'drizzle-orm';
+import { eq, and, lt, gt, gte } from 'drizzle-orm';
 import { Appointment } from '../../../domain/entities/appointment.entity';
 import { IAppointmentRepository } from '../../../domain/repositories/appointment.repository';
 import { appointments } from '../drizzle/schema';
@@ -46,6 +46,33 @@ export class DrizzleAppointmentRepository implements IAppointmentRepository {
     return results.map((row) => this.toDomainEntity(row));
   }
 
+  /**
+   * Finds appointments for a professional on a given date (YYYY-MM-DD).
+   * Uses UTC: start of date 00:00:00.000Z to start of next day (exclusive).
+   */
+  async findByProfessionalIdAndDate(
+    professionalId: string,
+    date: string,
+  ): Promise<Appointment[]> {
+    const startOfDay = new Date(`${date}T00:00:00.000Z`);
+    const startOfNextDay = new Date(
+      new Date(startOfDay).setUTCDate(startOfDay.getUTCDate() + 1),
+    );
+
+    const results = await this.db
+      .select()
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.professionalId, professionalId),
+          gte(appointments.startsAt, startOfDay),
+          lt(appointments.startsAt, startOfNextDay),
+        ),
+      );
+
+    return results.map((row) => this.toDomainEntity(row));
+  }
+
   async findByClientId(clientId: string): Promise<Appointment[]> {
     const results = await this.db
       .select()
@@ -82,6 +109,8 @@ export class DrizzleAppointmentRepository implements IAppointmentRepository {
       row.clientId,
       row.startsAt,
       row.endsAt,
+      row.createdAt,
+      row.updatedAt,
     );
   }
 }
