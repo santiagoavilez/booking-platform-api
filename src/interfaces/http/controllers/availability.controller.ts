@@ -16,10 +16,6 @@ import {
 } from '@nestjs/common';
 import { DefineAvailabilityUseCase } from '../../../application/use-cases/define-availability.use-case';
 import {
-  GetMyAvailabilityUseCase,
-  type GetMyAvailabilityOutput,
-} from '../../../application/use-cases/get-my-availability.use-case';
-import {
   GetProfessionalAvailabilityUseCase,
   type GetProfessionalAvailabilityOutput,
 } from '../../../application/use-cases/get-professional-availability.use-case';
@@ -49,7 +45,6 @@ import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
 export class AvailabilityController {
   constructor(
     private readonly defineAvailabilityUseCase: DefineAvailabilityUseCase,
-    private readonly getMyAvailabilityUseCase: GetMyAvailabilityUseCase,
     private readonly getProfessionalAvailabilityUseCase: GetProfessionalAvailabilityUseCase,
   ) {}
 
@@ -139,9 +134,9 @@ export class AvailabilityController {
       const authenticatedReq = req as AuthenticatedRequest;
       const professionalId = authenticatedReq.user.userId;
 
-      // Call use case to retrieve availability
-      const result: GetMyAvailabilityOutput =
-        await this.getMyAvailabilityUseCase.execute({
+      // Call use case to retrieve availability (same use case as GET /:professionalId)
+      const result: GetProfessionalAvailabilityOutput =
+        await this.getProfessionalAvailabilityUseCase.execute({
           professionalId,
         });
 

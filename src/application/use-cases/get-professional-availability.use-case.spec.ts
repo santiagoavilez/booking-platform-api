@@ -1,5 +1,5 @@
 /**
- * UNIT TESTS FOR DefineAvailabilityUseCase
+ * UNIT TESTS FOR GetProfessionalAvailabilityUseCase
  *
  * TESTING STRATEGY:
  * We use MOCKS instead of a real database because:
@@ -19,18 +19,18 @@
  */
 
 import {
-  GetMyAvailabilityInput,
-  GetMyAvailabilityOutput,
-  GetMyAvailabilityUseCase,
-} from './get-my-availability.use-case';
+  GetProfessionalAvailabilityInput,
+  GetProfessionalAvailabilityOutput,
+  GetProfessionalAvailabilityUseCase,
+} from './get-professional-availability.use-case';
 import { IAvailabilityRepository } from '../../domain/repositories/availability.repository';
 import { IUserRepository } from '../../domain/repositories/user.repository';
 import { Role } from '../../domain/enums/role.enum';
 import { User } from '../../domain/entities/user.entity';
 import { Availability } from '../../domain/entities/availability.entity';
 
-describe('GetMyAvailabilityUseCase', () => {
-  let useCase: GetMyAvailabilityUseCase;
+describe('GetProfessionalAvailabilityUseCase', () => {
+  let useCase: GetProfessionalAvailabilityUseCase;
 
   // Mocks of use case dependencies
   let mockAvailabilityRepository: jest.Mocked<IAvailabilityRepository>;
@@ -111,7 +111,7 @@ describe('GetMyAvailabilityUseCase', () => {
      * Normally NestJS does this automatically with DI (Dependency Injection)
      * In tests, we do it manually by passing the mocks
      */
-    useCase = new GetMyAvailabilityUseCase(
+    useCase = new GetProfessionalAvailabilityUseCase(
       mockAvailabilityRepository,
       mockUserRepository,
     );
@@ -143,10 +143,11 @@ describe('GetMyAvailabilityUseCase', () => {
           '17:00',
         ),
       ]);
-      const input: GetMyAvailabilityInput = {
+      const input: GetProfessionalAvailabilityInput = {
         professionalId: testProfessionalId,
       };
-      const result: GetMyAvailabilityOutput = await useCase.execute(input);
+      const result: GetProfessionalAvailabilityOutput =
+        await useCase.execute(input);
 
       /**
        * Verify calls to dependencies in the happy path
@@ -177,7 +178,7 @@ describe('GetMyAvailabilityUseCase', () => {
     // ----------------------------------------------------------
     it('should throw an error if professional is not found', async () => {
       // ========== ARRANGE ==========
-      const input: GetMyAvailabilityInput = {
+      const input: GetProfessionalAvailabilityInput = {
         professionalId: testProfessionalId,
       };
       mockFindById.mockResolvedValue(null);
@@ -192,7 +193,7 @@ describe('GetMyAvailabilityUseCase', () => {
     it('should throw an error if professional is not a professional', async () => {
       // ========== ARRANGE ==========
       const testClient = createTestClient();
-      const input: GetMyAvailabilityInput = {
+      const input: GetProfessionalAvailabilityInput = {
         professionalId: testClientId,
       };
       mockFindById.mockResolvedValue(testClient);
@@ -206,16 +207,17 @@ describe('GetMyAvailabilityUseCase', () => {
     // ----------------------------------------------------------
     // TEST 4: Error case - Professional has no availability slots
     // ----------------------------------------------------------
-    it('should throw an error if professional has no availability slots', async () => {
+    it('should return empty array when professional has no availability slots', async () => {
       // ========== ARRANGE ==========
       const professional = createTestProfessional();
       mockFindById.mockResolvedValue(professional);
       mockFindByProfessionalId.mockResolvedValue([]);
-      const input: GetMyAvailabilityInput = {
+      const input: GetProfessionalAvailabilityInput = {
         professionalId: testProfessionalId,
       };
 
-      const result: GetMyAvailabilityOutput = await useCase.execute(input);
+      const result: GetProfessionalAvailabilityOutput =
+        await useCase.execute(input);
       // {"availabilities": [], "professional": {"firstName": "John", "lastName": "Doe"}}
       expect(result).toEqual({
         availabilities: [],
@@ -250,7 +252,7 @@ describe('GetMyAvailabilityUseCase', () => {
       ];
       mockFindByProfessionalId.mockResolvedValue(multipleSlots);
 
-      const input: GetMyAvailabilityInput = {
+      const input: GetProfessionalAvailabilityInput = {
         professionalId: testProfessionalId,
       };
 

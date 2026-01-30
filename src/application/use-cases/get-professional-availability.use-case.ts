@@ -29,7 +29,8 @@ import {
  * - Validation logic is delegated to domain entities (User.isProfessional())
  *
  * DRY:
- * - Reuses professional validation pattern from GetMyAvailabilityUseCase
+ * - Single use case for "get availability by professional ID" used by both
+ *   GET /availability/me (professionalId from JWT) and GET /availability/:professionalId
  * - Reuses IAvailabilityRepository.findByProfessionalId() method
  *
  * SECURITY:
