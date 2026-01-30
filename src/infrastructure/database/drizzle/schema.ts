@@ -51,3 +51,17 @@ export const availability = pgTable('availability', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+/**
+ * Drizzle schema for appointments table
+ * Stores booked appointments between clients and professionals
+ */
+export const appointments = pgTable('appointments', {
+  id: text('id').primaryKey(),
+  professionalId: text('professional_id').notNull(),
+  clientId: text('client_id').notNull(),
+  startsAt: timestamp('starts_at').notNull(),
+  endsAt: timestamp('ends_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

@@ -1,10 +1,18 @@
 // src/application/use-cases/create-appointment.use-case.ts
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Appointment } from '../../domain/entities/appointment.entity';
 import { type IAppointmentRepository } from '../../domain/repositories/appointment.repository';
 import { type IAvailabilityRepository } from '../../domain/repositories/availability.repository';
 import { type IUserRepository } from '../../domain/repositories/user.repository';
+import { type IIdGenerator } from '../../domain/services/id-generator.interface';
+import { Time } from '../../domain/value-objects/time.vo';
+import {
+  APPOINTMENT_REPOSITORY,
+  AVAILABILITY_REPOSITORY,
+  USER_REPOSITORY,
+  ID_GENERATOR,
+} from '../../interfaces/providers';
 import { EnsureProfessionalExistsUseCase } from './ensure-professional-exists.use-case';
 
 /**
@@ -37,9 +45,14 @@ export interface CreateAppointmentOutput {
 @Injectable()
 export class CreateAppointmentUseCase {
   constructor(
+    @Inject(APPOINTMENT_REPOSITORY)
     private readonly appointmentRepository: IAppointmentRepository,
+    @Inject(AVAILABILITY_REPOSITORY)
     private readonly availabilityRepository: IAvailabilityRepository,
+    @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
+    @Inject(ID_GENERATOR)
+    private readonly idGenerator: IIdGenerator,
     private readonly ensureProfessionalExistsUseCase: EnsureProfessionalExistsUseCase,
   ) {}
 
@@ -77,9 +90,10 @@ export class CreateAppointmentUseCase {
     }
 
     // 6. Validate professional availability for that day and time
-    const dayOfWeek = input.startsAt.getDay();
-    const startTime = this.formatTime(input.startsAt);
-    const endTime = this.formatTime(input.endsAt);
+    // Use UTC: API sends date + time as UTC; availability slots are stored as HH:mm (UTC)
+    const dayOfWeek = input.startsAt.getUTCDay();
+    const startTime = Time.fromDateUtc(input.startsAt).toString();
+    const endTime = Time.fromDateUtc(input.endsAt).toString();
 
     const availableSlots =
       await this.availabilityRepository.findByProfessionalIdAndDay(
@@ -114,7 +128,7 @@ export class CreateAppointmentUseCase {
 
     // 8. Create appointment (domain entity)
     const appointment = new Appointment(
-      this.generateId(),
+      this.idGenerator.generate(),
       input.professionalId,
       input.clientId,
       input.startsAt,
@@ -133,16 +147,5 @@ export class CreateAppointmentUseCase {
       startsAt: savedAppointment.startsAt,
       endsAt: savedAppointment.endsAt,
     };
-  }
-
-  private formatTime(date: Date): string {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-  }
-
-  private generateId(): string {
-    // TODO: Implement unique ID generation
-    throw new Error('ID generation not implemented');
   }
 }

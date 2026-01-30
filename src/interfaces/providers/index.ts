@@ -11,3 +11,4 @@ export * from './services.providers';
 export * from './config.providers';
 export * from './refresh-token.providers';
 export * from './availability.providers';
+export * from './appointment.providers';

@@ -29,6 +29,35 @@ export class Time {
   }
 
   /**
+   * Creates a Time value object from a Date (extracts time part as HH:mm in local timezone).
+   * Keeps time formatting in domain (DRY) and avoids duplicating format logic in use cases.
+   *
+   * @param date - JavaScript Date to extract time from
+   * @returns Time in HH:mm format (local)
+   */
+  static fromDate(date: Date): Time {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const value = `${hours}:${minutes}`;
+    return new Time(value);
+  }
+
+  /**
+   * Creates a Time value object from a Date using UTC (getUTCHours, getUTCMinutes).
+   * Use when the Date was built as UTC (e.g. from API "date + time" interpreted as UTC).
+   * Ensures availability comparison uses the same time reference as the stored slots (UTC).
+   *
+   * @param date - JavaScript Date to extract UTC time from
+   * @returns Time in HH:mm format (UTC)
+   */
+  static fromDateUtc(date: Date): Time {
+    const hours = date.getUTCHours().toString().padStart(2, '0');
+    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+    const value = `${hours}:${minutes}`;
+    return new Time(value);
+  }
+
+  /**
    * Validates if a string has valid HH:mm format
    */
   static isValidFormat(value: string): boolean {

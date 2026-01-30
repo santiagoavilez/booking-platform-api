@@ -5,6 +5,8 @@ import { AppService } from './app.service';
 import { RegisterUserUseCase } from './application/use-cases/auth/register-user.use-case';
 import { LoginUseCase } from './application/use-cases/auth/login.use-case';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case';
+import { CreateAppointmentUseCase } from './application/use-cases/create-appointment.use-case';
+import { GetMyAppointmentsUseCase } from './application/use-cases/get-my-appointments.use-case';
 import { DefineAvailabilityUseCase } from './application/use-cases/define-availability.use-case';
 import { EnsureProfessionalExistsUseCase } from './application/use-cases/ensure-professional-exists.use-case';
 import { GetProfessionalAvailabilityUseCase } from './application/use-cases/get-professional-availability.use-case';
@@ -18,9 +20,11 @@ import {
   jwtTokenVerifierProvider,
   refreshTokenRepositoryProvider,
   availabilityRepositoryProvider,
+  appointmentRepositoryProvider,
 } from './interfaces/providers';
 import { AuthController } from './interfaces/http/controllers/auth.controller';
 import { AvailabilityController } from './interfaces/http/controllers/availability.controller';
+import { AppointmentController } from './interfaces/http/controllers/appointment.controller';
 import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
 
 @Module({
@@ -29,7 +33,12 @@ import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
       isGlobal: true,
     }),
   ],
-  controllers: [AppController, AuthController, AvailabilityController],
+  controllers: [
+    AppController,
+    AuthController,
+    AvailabilityController,
+    AppointmentController,
+  ],
   providers: [
     AppService,
     // Database
@@ -38,6 +47,7 @@ import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
     userRepositoryProvider,
     refreshTokenRepositoryProvider,
     availabilityRepositoryProvider,
+    appointmentRepositoryProvider,
     // Configuration
     jwtConfigProvider,
     // Services
@@ -54,6 +64,8 @@ import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
     EnsureProfessionalExistsUseCase,
     DefineAvailabilityUseCase,
     GetProfessionalAvailabilityUseCase,
+    CreateAppointmentUseCase,
+    GetMyAppointmentsUseCase,
   ],
 })
 export class AppModule {}

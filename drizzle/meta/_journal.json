@@ -29,6 +29,13 @@
       "when": 1769389934788,
       "tag": "0003_wealthy_true_believers",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769390000000,
+      "tag": "0004_appointments",
+      "breakpoints": true
     }
   ]
 }
