@@ -1,12 +1,19 @@
 // src/infrastructure/database/repositories/drizzle-user.repository.ts
 
 import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, asc, eq, ilike, sql } from 'drizzle-orm';
 import { User } from '../../../domain/entities/user.entity';
 import { Role } from '../../../domain/enums/role.enum';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { users } from '../drizzle/schema';
 import type { DrizzleClient } from '../drizzle';
+
+/**
+ * Escapes LIKE special characters (% and _) to avoid wildcard injection.
+ */
+function escapeLike(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
+}
 
 /**
  * ARCHITECTURAL DECISION:
@@ -60,6 +67,48 @@ export class DrizzleUserRepository implements IUserRepository {
       .limit(1);
 
     return user ? this.toDomainEntity(user) : null;
+  }
+
+  async findProfessionalsPaginated(
+    search: string | undefined,
+    page: number,
+    limit: number,
+  ): Promise<{ items: User[]; total: number }> {
+    const roleCondition = eq(
+      users.role,
+      Role.PROFESSIONAL as (typeof users.role.enumValues)[number],
+    );
+    const searchCondition =
+      search && search.trim().length > 0
+        ? ilike(
+            sql`concat(${users.firstName}, ' ', ${users.lastName})`,
+            `%${escapeLike(search.trim())}%`,
+          )
+        : undefined;
+    const whereClause =
+      searchCondition !== undefined
+        ? and(roleCondition, searchCondition)
+        : roleCondition;
+
+    const offset = (page - 1) * limit;
+
+    const [itemsRows, countResult] = await Promise.all([
+      this.db
+        .select()
+        .from(users)
+        .where(whereClause)
+        .orderBy(asc(users.firstName), asc(users.lastName))
+        .limit(limit)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(users)
+        .where(whereClause),
+    ]);
+
+    const total = countResult[0]?.count ?? 0;
+    const items = itemsRows.map((row) => this.toDomainEntity(row));
+    return { items, total };
   }
 
   /**

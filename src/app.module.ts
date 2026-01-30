@@ -11,6 +11,7 @@ import { GetAppointmentsByProfessionalAndDateUseCase } from './application/use-c
 import { DefineAvailabilityUseCase } from './application/use-cases/define-availability.use-case';
 import { EnsureProfessionalExistsUseCase } from './application/use-cases/ensure-professional-exists.use-case';
 import { GetProfessionalAvailabilityUseCase } from './application/use-cases/get-professional-availability.use-case';
+import { SearchProfessionalsUseCase } from './application/use-cases/search-professionals.use-case';
 import {
   drizzleClientProvider,
   userRepositoryProvider,
@@ -26,6 +27,7 @@ import {
 import { AuthController } from './interfaces/http/controllers/auth.controller';
 import { AvailabilityController } from './interfaces/http/controllers/availability.controller';
 import { AppointmentController } from './interfaces/http/controllers/appointment.controller';
+import { ProfessionalController } from './interfaces/http/controllers/professional.controller';
 import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
 
 @Module({
@@ -39,6 +41,7 @@ import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
     AuthController,
     AvailabilityController,
     AppointmentController,
+    ProfessionalController,
   ],
   providers: [
     AppService,
@@ -68,6 +71,7 @@ import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
     CreateAppointmentUseCase,
     GetMyAppointmentsUseCase,
     GetAppointmentsByProfessionalAndDateUseCase,
+    SearchProfessionalsUseCase,
   ],
 })
 export class AppModule {}

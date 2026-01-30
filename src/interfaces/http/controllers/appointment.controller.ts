@@ -145,7 +145,7 @@ export class AppointmentController {
     const data = appointments.map(
       (item: AppointmentWithParties): AppointmentResponseDto =>
         // Mapper return type is AppointmentResponseDto; resolver may not see it across layers
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call -- toAppointmentResponseDtoFromEnriched(item) returns AppointmentResponseDto
+
         toAppointmentResponseDtoFromEnriched(item),
     );
     return { success: true, data };
