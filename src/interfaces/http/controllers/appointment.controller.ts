@@ -19,11 +19,14 @@ import { GetMyAppointmentsUseCase } from '../../../application/use-cases/get-my-
 import { GetAppointmentsByProfessionalAndDateUseCase } from '../../../application/use-cases/get-appointments-by-professional-and-date.use-case';
 import { CreateAppointmentDto } from '../dto/create-appointment.dto';
 import {
+  type AppointmentResponseDto,
   toCreateAppointmentInput,
   toAppointmentResponseDto,
+  toAppointmentResponseDtoFromEnriched,
 } from '../mappers/appointment.mapper';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
+import type { AppointmentWithParties } from '../../../application/dtos/appointment-with-parties.dto';
 
 /**
  * ARCHITECTURAL DECISION:
@@ -127,17 +130,25 @@ export class AppointmentController {
 
   /**
    * GET /appointments
-   * Returns appointments for the authenticated user (as client).
-   * Response shape: { id, professionalId, clientId, date, startTime, endTime, createdAt?, updatedAt? }.
+   * Returns appointments for the authenticated user (as client or professional).
+   * Response includes professional and client firstName/lastName for the front to show by role.
    */
   @Get()
-  async findMyAppointments(@Req() req: AuthenticatedRequest) {
-    const clientId = req.user.userId;
-    const appointments = await this.getMyAppointmentsUseCase.execute(clientId);
-    return {
-      success: true,
-      data: appointments.map(toAppointmentResponseDto),
-    };
+  async findMyAppointments(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{ success: true; data: AppointmentResponseDto[] }> {
+    const appointments: AppointmentWithParties[] =
+      await this.getMyAppointmentsUseCase.execute(
+        req.user.userId,
+        req.user.role,
+      );
+    const data = appointments.map(
+      (item: AppointmentWithParties): AppointmentResponseDto =>
+        // Mapper return type is AppointmentResponseDto; resolver may not see it across layers
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call -- toAppointmentResponseDtoFromEnriched(item) returns AppointmentResponseDto
+        toAppointmentResponseDtoFromEnriched(item),
+    );
+    return { success: true, data };
   }
 
   /**
@@ -162,7 +173,7 @@ export class AppointmentController {
       );
     return {
       success: true,
-      data: appointments.map(toAppointmentResponseDto),
+      data: appointments.map((a) => toAppointmentResponseDto(a)),
     };
   }
 }

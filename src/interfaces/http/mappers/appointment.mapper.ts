@@ -3,6 +3,7 @@
 import type { CreateAppointmentDto } from '../dto/create-appointment.dto';
 import type { CreateAppointmentInput } from '../../../application/use-cases/create-appointment.use-case';
 import type { Appointment } from '../../../domain/entities/appointment.entity';
+import type { AppointmentWithParties } from '../../../application/dtos/appointment-with-parties.dto';
 
 /**
  * ARCHITECTURAL DECISION:
@@ -12,13 +13,23 @@ import type { Appointment } from '../../../domain/entities/appointment.entity';
  */
 
 /**
- * Response shape for appointment: date + times + audit fields.
- * Matches frontend consumption; createdAt/updatedAt when loaded from DB.
+ * Party name for professional or client in appointment response.
+ */
+export interface AppointmentPartyDto {
+  firstName: string;
+  lastName: string;
+}
+
+/**
+ * Response shape for appointment: date + times + audit fields + party names.
+ * professional/client allow the front to show names by role; professionalId/clientId kept for compatibility.
  */
 export interface AppointmentResponseDto {
   id: string;
   professionalId: string;
   clientId: string;
+  professional: AppointmentPartyDto;
+  client: AppointmentPartyDto;
   date: string;
   startTime: string;
   endTime: string;
@@ -44,17 +55,23 @@ export function toCreateAppointmentInput(
   };
 }
 
+const EMPTY_PARTY: AppointmentPartyDto = { firstName: '', lastName: '' };
+
 /**
  * Maps domain appointment to API response (date + startTime/endTime).
  * Uses UTC from stored timestamps so round-trip is consistent.
+ * When parties is omitted (e.g. POST create), professional/client are empty.
  */
 export function toAppointmentResponseDto(
   appointment: Appointment,
+  parties?: { professional: AppointmentPartyDto; client: AppointmentPartyDto },
 ): AppointmentResponseDto {
   const dto: AppointmentResponseDto = {
     id: appointment.id,
     professionalId: appointment.professionalId,
     clientId: appointment.clientId,
+    professional: parties?.professional ?? EMPTY_PARTY,
+    client: parties?.client ?? EMPTY_PARTY,
     date: formatDateUtc(appointment.startsAt),
     startTime: formatTimeUtc(appointment.startsAt),
     endTime: formatTimeUtc(appointment.endsAt),
@@ -66,6 +83,18 @@ export function toAppointmentResponseDto(
     dto.updatedAt = appointment.updatedAt.toISOString();
   }
   return dto;
+}
+
+/**
+ * Maps enriched "my appointments" result to API response with party names.
+ */
+export function toAppointmentResponseDtoFromEnriched(
+  item: AppointmentWithParties,
+): AppointmentResponseDto {
+  return toAppointmentResponseDto(item.appointment, {
+    professional: item.professional,
+    client: item.client,
+  });
 }
 
 function parseDateAndTimeAsUtc(date: string, time: string): Date {
