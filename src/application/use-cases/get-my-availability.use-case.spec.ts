@@ -17,3 +17,253 @@
  * - Output validation (availability slots count)
  * - Error cases (professional not found)
  */
+
+import {
+  GetMyAvailabilityInput,
+  GetMyAvailabilityOutput,
+  GetMyAvailabilityUseCase,
+} from './get-my-availability.use-case';
+import { IAvailabilityRepository } from '../../domain/repositories/availability.repository';
+import { IUserRepository } from '../../domain/repositories/user.repository';
+import { Role } from '../../domain/enums/role.enum';
+import { User } from '../../domain/entities/user.entity';
+import { Availability } from '../../domain/entities/availability.entity';
+
+describe('GetMyAvailabilityUseCase', () => {
+  let useCase: GetMyAvailabilityUseCase;
+
+  // Mocks of use case dependencies
+  let mockAvailabilityRepository: jest.Mocked<IAvailabilityRepository>;
+  let mockUserRepository: jest.Mocked<IUserRepository>;
+
+  // Individual mock functions for assertions
+  let mockFindById: jest.MockedFunction<IUserRepository['findById']>;
+  let mockFindByProfessionalId: jest.MockedFunction<
+    IAvailabilityRepository['findByProfessionalId']
+  >;
+
+  /**
+   * Test data we'll reuse
+   */
+  const testProfessionalId = 'professional-123';
+  const testEmail = 'professional@example.com';
+  const testPasswordHash = 'hashed_password_123';
+  const testFirstName = 'John';
+  const testLastName = 'Doe';
+
+  /**
+   * Helper function to create a test professional user
+   */
+  const createTestProfessional = (): User => {
+    return new User(
+      testProfessionalId,
+      testEmail,
+      testPasswordHash,
+      Role.PROFESSIONAL,
+      testFirstName,
+      testLastName,
+    );
+  };
+
+  const testClientId = 'client-123';
+
+  const createTestClient = (): User => {
+    return new User(
+      testClientId,
+      'client@example.com',
+      testPasswordHash,
+      Role.CLIENT,
+      'Jane',
+      'Smith',
+    );
+  };
+
+  // ============================================================
+  // beforeEach - Runs BEFORE each test
+  // ============================================================
+  /**
+   * beforeEach:
+   * - Runs before EACH test (it)
+   * - Here we reset all mocks so each test starts "clean"
+   * - This prevents one test from affecting another
+   */
+  beforeEach(() => {
+    mockFindById = jest.fn();
+    mockFindByProfessionalId = jest.fn();
+    mockUserRepository = {
+      findById: mockFindById,
+      findByEmail: jest.fn(),
+      create: jest.fn(),
+    };
+
+    mockAvailabilityRepository = {
+      create: jest.fn(),
+      createMany: jest.fn(),
+      findByProfessionalId: mockFindByProfessionalId,
+      findByProfessionalIdAndDay: jest.fn(),
+      deleteByProfessionalId: jest.fn(),
+      findByProfessionalIdAndTimeRange: jest.fn(),
+    };
+
+    /**
+     * create the use case with mocked dependencies
+     *
+     * Normally NestJS does this automatically with DI (Dependency Injection)
+     * In tests, we do it manually by passing the mocks
+     */
+    useCase = new GetMyAvailabilityUseCase(
+      mockAvailabilityRepository,
+      mockUserRepository,
+    );
+  });
+
+  // ============================================================
+  // TESTS
+  // ============================================================
+
+  /**
+   * describe() groups related tests
+   * We use nested describe blocks to better organize tests
+   */
+  describe('execute', () => {
+    // ----------------------------------------------------------
+    // TEST 1: Happy Path - Get availability successfully
+    // ----------------------------------------------------------
+    it('should get availability slots successfully and return correct count', async () => {
+      // ========== ARRANGE ==========
+      // Prepare the scenario: professional exists and has availability slots
+      const professional = createTestProfessional();
+      mockFindById.mockResolvedValue(professional);
+      mockFindByProfessionalId.mockResolvedValue([
+        new Availability(
+          'availability-1',
+          testProfessionalId,
+          1,
+          '09:00',
+          '17:00',
+        ),
+      ]);
+      const input: GetMyAvailabilityInput = {
+        professionalId: testProfessionalId,
+      };
+      const result: GetMyAvailabilityOutput = await useCase.execute(input);
+
+      /**
+       * Verify calls to dependencies in the happy path
+       * For the successful flow, we can ensure that the repository is used correctly:
+       * mockFindById called 1 time with testProfessionalId.
+       * mockFindByProfessionalId called 1 time with testProfessionalId.
+       */
+      expect(mockFindById).toHaveBeenCalledTimes(1);
+      expect(mockFindById).toHaveBeenCalledWith(testProfessionalId);
+      expect(mockFindByProfessionalId).toHaveBeenCalledTimes(1);
+      expect(mockFindByProfessionalId).toHaveBeenCalledWith(testProfessionalId);
+      expect(result).toBeDefined();
+      expect(result.availabilities).toBeDefined();
+      expect(result.availabilities.length).toBe(1);
+      expect(result.professional).toEqual({
+        firstName: professional.firstName,
+        lastName: professional.lastName,
+      });
+      expect(result.availabilities[0].id).toBe('availability-1');
+      expect(result.availabilities[0].professionalId).toBe(testProfessionalId);
+      expect(result.availabilities[0].dayOfWeek).toBe(1);
+      expect(result.availabilities[0].startTime).toBe('09:00');
+      expect(result.availabilities[0].endTime).toBe('17:00');
+    });
+
+    // ----------------------------------------------------------
+    // TEST 2: Error case - Professional not found
+    // ----------------------------------------------------------
+    it('should throw an error if professional is not found', async () => {
+      // ========== ARRANGE ==========
+      const input: GetMyAvailabilityInput = {
+        professionalId: testProfessionalId,
+      };
+      mockFindById.mockResolvedValue(null);
+      await expect(useCase.execute(input)).rejects.toThrow('User not found');
+      expect(mockFindById).toHaveBeenCalledTimes(1);
+      expect(mockFindById).toHaveBeenCalledWith(testProfessionalId);
+    });
+
+    // ----------------------------------------------------------
+    // TEST 3: Error case - Professional is not a professional
+    // ----------------------------------------------------------
+    it('should throw an error if professional is not a professional', async () => {
+      // ========== ARRANGE ==========
+      const testClient = createTestClient();
+      const input: GetMyAvailabilityInput = {
+        professionalId: testClientId,
+      };
+      mockFindById.mockResolvedValue(testClient);
+      await expect(useCase.execute(input)).rejects.toThrow(
+        'User is not a professional',
+      );
+      expect(mockFindById).toHaveBeenCalledTimes(1);
+      expect(mockFindById).toHaveBeenCalledWith(testClientId);
+    });
+
+    // ----------------------------------------------------------
+    // TEST 4: Error case - Professional has no availability slots
+    // ----------------------------------------------------------
+    it('should throw an error if professional has no availability slots', async () => {
+      // ========== ARRANGE ==========
+      const professional = createTestProfessional();
+      mockFindById.mockResolvedValue(professional);
+      mockFindByProfessionalId.mockResolvedValue([]);
+      const input: GetMyAvailabilityInput = {
+        professionalId: testProfessionalId,
+      };
+
+      const result: GetMyAvailabilityOutput = await useCase.execute(input);
+      // {"availabilities": [], "professional": {"firstName": "John", "lastName": "Doe"}}
+      expect(result).toEqual({
+        availabilities: [],
+        professional: {
+          firstName: result.professional.firstName,
+          lastName: result.professional.lastName,
+        },
+      });
+      expect(result.availabilities).toEqual([]);
+      expect(result.professional).toEqual({
+        firstName: professional.firstName,
+        lastName: professional.lastName,
+      });
+      expect(result.availabilities.length).toBe(0);
+      expect(mockFindById).toHaveBeenCalledTimes(1);
+      expect(mockFindById).toHaveBeenCalledWith(testProfessionalId);
+      expect(mockFindByProfessionalId).toHaveBeenCalledTimes(1);
+      expect(mockFindByProfessionalId).toHaveBeenCalledWith(testProfessionalId);
+    });
+
+    // ----------------------------------------------------------
+    // TEST 5: Return all availability slots when professional has multiple slots
+    // ----------------------------------------------------------
+    it('should return all availability slots when professional has multiple slots', async () => {
+      // ARRANGE
+      const professional = createTestProfessional();
+      mockFindById.mockResolvedValue(professional);
+      const multipleSlots = [
+        new Availability('av-1', testProfessionalId, 1, '09:00', '17:00'),
+        new Availability('av-2', testProfessionalId, 2, '10:00', '18:00'),
+        new Availability('av-3', testProfessionalId, 3, '08:00', '16:00'),
+      ];
+      mockFindByProfessionalId.mockResolvedValue(multipleSlots);
+
+      const input: GetMyAvailabilityInput = {
+        professionalId: testProfessionalId,
+      };
+
+      // ACT
+      const result = await useCase.execute(input);
+
+      // ASSERT
+      expect(result.availabilities).toHaveLength(3);
+      expect(result.availabilities[0].dayOfWeek).toBe(1);
+      expect(result.availabilities[1].dayOfWeek).toBe(2);
+      expect(result.availabilities[2].dayOfWeek).toBe(3);
+      expect(result.professional.firstName).toBe(testFirstName);
+      expect(result.professional.lastName).toBe(testLastName);
+    });
+  });
+});
