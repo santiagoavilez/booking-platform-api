@@ -9,6 +9,7 @@ import {
   USER_REPOSITORY,
 } from '../../interfaces/providers';
 import type { AppointmentWithParties } from '../dtos/appointment-with-parties.dto';
+import type { Appointment } from '../../domain/entities/appointment.entity';
 
 export type { AppointmentWithParties };
 
@@ -18,7 +19,7 @@ const UNKNOWN_PARTY = { firstName: 'Unknown', lastName: '' };
  * ARCHITECTURAL DECISION:
  * - What: Use case to list appointments for the authenticated user (client or professional)
  * - Why: Single responsibility; returns "my" appointments with party names for the front
- * - If user is professional: appointments where they are the professional; if client: where they are the client
+ * - If user is professional: appointments where they are the professional or the client (e.g. when they booked with another professional); if client: where they are the client.
  */
 @Injectable()
 export class GetMyAppointmentsUseCase {
@@ -36,10 +37,16 @@ export class GetMyAppointmentsUseCase {
     const isProfessional =
       role?.toUpperCase() === (Role.PROFESSIONAL as string);
 
-    const appointments = isProfessional
-      ? await this.appointmentRepository.findByProfessionalId(userId)
-      : await this.appointmentRepository.findByClientId(userId);
+    let appointments: Appointment[];
 
+    if (isProfessional) {
+      const asProfessional =
+        await this.appointmentRepository.findByProfessionalId(userId);
+      const asClient = await this.appointmentRepository.findByClientId(userId);
+      appointments = [...asProfessional, ...asClient];
+    } else {
+      appointments = await this.appointmentRepository.findByClientId(userId);
+    }
     if (appointments.length === 0) {
       return [];
     }
@@ -58,8 +65,11 @@ export class GetMyAppointmentsUseCase {
           : UNKNOWN_PARTY,
       );
     }
-
-    return appointments.map((appointment) => ({
+    // order appointments by startsAt
+    const orderedAppointments = [...appointments].sort(
+      (a, b) => a.startsAt.getTime() - b.startsAt.getTime(),
+    );
+    return orderedAppointments.map((appointment) => ({
       appointment,
       professional: userMap.get(appointment.professionalId) ?? UNKNOWN_PARTY,
       client: userMap.get(appointment.clientId) ?? UNKNOWN_PARTY,
