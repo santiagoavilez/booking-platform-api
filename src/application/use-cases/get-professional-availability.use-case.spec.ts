@@ -167,12 +167,14 @@ describe('GetProfessionalAvailabilityUseCase', () => {
     it('should throw an error if professional is not found', async () => {
       // ========== ARRANGE ==========
       const input: GetProfessionalAvailabilityInput = {
-        professionalId: testProfessionalId,
+        professionalId: 'nonexistent-professional-id',
       };
       mockEnsureExecute.mockRejectedValue(new Error('User not found'));
       await expect(useCase.execute(input)).rejects.toThrow('User not found');
       expect(mockEnsureExecute).toHaveBeenCalledTimes(1);
-      expect(mockEnsureExecute).toHaveBeenCalledWith(testProfessionalId);
+      expect(mockEnsureExecute).toHaveBeenCalledWith(
+        'nonexistent-professional-id',
+      );
     });
 
     // ----------------------------------------------------------
