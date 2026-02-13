@@ -29,6 +29,15 @@ import { AvailabilityController } from './interfaces/http/controllers/availabili
 import { AppointmentController } from './interfaces/http/controllers/appointment.controller';
 import { ProfessionalController } from './interfaces/http/controllers/professional.controller';
 import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
+import {
+  emailSenderProvider,
+  smsSenderProvider,
+  pushSenderProvider,
+  whatsappSenderProvider,
+  notificationRepositoryProvider,
+  notificationSenderFactoryProvider,
+} from './interfaces/providers/notification.providers';
+import { SendNotificationsUseCase } from './application/use-cases/send-notifications.use-case';
 
 @Module({
   imports: [
@@ -52,6 +61,12 @@ import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
     refreshTokenRepositoryProvider,
     availabilityRepositoryProvider,
     appointmentRepositoryProvider,
+    emailSenderProvider,
+    smsSenderProvider,
+    pushSenderProvider,
+    whatsappSenderProvider,
+    notificationRepositoryProvider,
+    notificationSenderFactoryProvider,
     // Configuration
     jwtConfigProvider,
     // Services
@@ -72,6 +87,7 @@ import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
     GetMyAppointmentsUseCase,
     GetAppointmentsByProfessionalAndDateUseCase,
     SearchProfessionalsUseCase,
+    SendNotificationsUseCase,
   ],
 })
 export class AppModule {}

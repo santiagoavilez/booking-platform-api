@@ -27,7 +27,8 @@ import { Role } from '../../domain/enums/role.enum';
 import { User } from '../../domain/entities/user.entity';
 import { Appointment } from '../../domain/entities/appointment.entity';
 import { type Availability } from '../../domain/entities/availability.entity';
-
+import type { SendNotificationsUseCase } from './send-notifications.use-case';
+import { NotificationChannel } from '../../domain/enums/notification-channel.enum';
 /**
  * EXPLANATION OF MOCKS:
  *
@@ -96,6 +97,10 @@ describe('CreateAppointmentUseCase', () => {
   >;
   let mockGenerate: jest.MockedFunction<IIdGenerator['generate']>;
   let mockCreate: jest.MockedFunction<IAppointmentRepository['create']>;
+  let mockSendNotificationsUseCase: jest.Mocked<SendNotificationsUseCase>;
+  let mockSendNotificationsExecute: jest.MockedFunction<
+    SendNotificationsUseCase['execute']
+  >;
   /**
    * Helper function to create a test professional user
    */
@@ -177,6 +182,9 @@ describe('CreateAppointmentUseCase', () => {
     mockFindOverlapping = jest.fn();
     mockGenerate = jest.fn();
     mockCreate = jest.fn();
+    mockSendNotificationsExecute = jest.fn().mockResolvedValue({
+      notifications: [],
+    });
 
     mockAppointmentRepository = {
       create: mockCreate,
@@ -206,12 +214,16 @@ describe('CreateAppointmentUseCase', () => {
     mockIdGenerator = {
       generate: mockGenerate,
     };
+    mockSendNotificationsUseCase = {
+      execute: mockSendNotificationsExecute,
+    } as unknown as jest.Mocked<SendNotificationsUseCase>;
     createAppointmentUseCase = new CreateAppointmentUseCase(
       mockAppointmentRepository,
       mockAvailabilityRepository,
       mockUserRepository,
       mockIdGenerator,
       mockEnsureProfessionalExistsUseCase,
+      mockSendNotificationsUseCase,
     );
   });
 
@@ -238,13 +250,19 @@ describe('CreateAppointmentUseCase', () => {
       endsAt,
     );
 
+    const channels = [NotificationChannel.EMAIL, NotificationChannel.WHATSAPP];
+
     // --- ARRANGE: mock responses (dependencies return values) ---
     mockIdGenerator.generate.mockReturnValue(appointmentId);
     mockEnsureProfessionalExistsUseCase.execute.mockResolvedValue(professional);
     mockAvailabilityRepository.findByProfessionalIdAndDay.mockResolvedValue(
       availableSlots as Availability[],
     );
-    mockUserRepository.findById.mockResolvedValue(client);
+    mockFindById.mockImplementation((id: string) => {
+      if (id === professional.id) return Promise.resolve(professional);
+      if (id === client.id) return Promise.resolve(client);
+      return Promise.resolve(null);
+    });
     mockAppointmentRepository.findOverlapping.mockResolvedValue([]);
     mockAppointmentRepository.create.mockResolvedValue(expectedAppointment);
 
@@ -267,6 +285,16 @@ describe('CreateAppointmentUseCase', () => {
     );
     expect(mockGenerate).toHaveBeenCalled();
     expect(mockCreate).toHaveBeenCalledWith(expectedAppointment);
+    expect(mockSendNotificationsExecute).toHaveBeenCalledWith({
+      recipientId: client.id,
+      message: `Appointment scheduled: ${startsAt.toISOString()} - ${endsAt.toISOString()} with ${professional.firstName} ${professional.lastName}`,
+      channels: channels,
+    });
+    expect(mockSendNotificationsExecute).toHaveBeenCalledWith({
+      recipientId: professional.id,
+      message: `Appointment scheduled: ${startsAt.toISOString()} - ${endsAt.toISOString()} with ${client.firstName} ${client.lastName}`,
+      channels: channels,
+    });
   });
 
   /**
@@ -301,6 +329,7 @@ describe('CreateAppointmentUseCase', () => {
     expect(mockFindOverlapping).not.toHaveBeenCalled();
     expect(mockGenerate).not.toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockSendNotificationsExecute).not.toHaveBeenCalled();
   });
 
   /**
@@ -337,6 +366,7 @@ describe('CreateAppointmentUseCase', () => {
     expect(mockGenerate).not.toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
     expect(mockFindByProfessionalIdAndDay).not.toHaveBeenCalled();
+    expect(mockSendNotificationsExecute).not.toHaveBeenCalled();
   });
 
   /**
@@ -373,6 +403,7 @@ describe('CreateAppointmentUseCase', () => {
     expect(mockGenerate).not.toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
     expect(mockFindByProfessionalIdAndDay).not.toHaveBeenCalled();
+    expect(mockSendNotificationsExecute).not.toHaveBeenCalled();
   });
   /**
    * test for creating an appointment when it is in the past
@@ -409,8 +440,8 @@ describe('CreateAppointmentUseCase', () => {
     expect(mockFindById).toHaveBeenCalledWith(client.id);
     expect(mockFindOverlapping).not.toHaveBeenCalled();
     expect(mockGenerate).not.toHaveBeenCalled();
-    expect(mockCreate).not.toHaveBeenCalled();
     expect(mockFindByProfessionalIdAndDay).not.toHaveBeenCalled();
+    expect(mockSendNotificationsExecute).not.toHaveBeenCalled();
   });
 
   /**
@@ -447,6 +478,7 @@ describe('CreateAppointmentUseCase', () => {
     expect(mockFindById).toHaveBeenCalledWith(client.id);
     expect(mockFindOverlapping).not.toHaveBeenCalled();
     expect(mockGenerate).not.toHaveBeenCalled();
+    expect(mockSendNotificationsExecute).not.toHaveBeenCalled();
   });
   /**
    * test for creating an appointment when it is not within the professional's availability
@@ -482,6 +514,7 @@ describe('CreateAppointmentUseCase', () => {
     expect(mockFindOverlapping).not.toHaveBeenCalled();
     expect(mockGenerate).not.toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockSendNotificationsExecute).not.toHaveBeenCalled();
   });
 
   /**
@@ -523,6 +556,7 @@ describe('CreateAppointmentUseCase', () => {
     expect(mockFindOverlapping).not.toHaveBeenCalled();
     expect(mockGenerate).not.toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockSendNotificationsExecute).not.toHaveBeenCalled();
   });
 
   /**
@@ -570,5 +604,6 @@ describe('CreateAppointmentUseCase', () => {
     );
     expect(mockGenerate).not.toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockSendNotificationsExecute).not.toHaveBeenCalled();
   });
 });

@@ -1,11 +1,19 @@
 // src/application/use-cases/send-notifications.use-case.ts
 
-import { Injectable } from '@nestjs/common';
-import { Notification } from '../../domain/entities/notification.entity';
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  Notification,
+  NotificationStatus,
+} from '../../domain/entities/notification.entity';
 import { NotificationChannel } from '../../domain/enums/notification-channel.enum';
-import { NotificationStatus } from '../../domain/entities/notification.entity';
-import { type INotificationRepository } from '../../domain/repositories/notification.repository';
-import { type INotificationSender } from '../../domain/services/notification-sender.interface';
+import type { INotificationRepository } from '../../domain/repositories/notification.repository';
+import type { IIdGenerator } from '../../domain/services/id-generator.interface';
+import type { INotificationSenderFactory } from '../../domain/services/notification-sender-factory.interface';
+import {
+  ID_GENERATOR,
+  NOTIFICATION_REPOSITORY,
+  NOTIFICATION_SENDER_FACTORY,
+} from '../../interfaces/providers';
 
 /**
  * ARCHITECTURAL DECISION:
@@ -20,6 +28,8 @@ import { type INotificationSender } from '../../domain/services/notification-sen
  * - Each channel (Email, SMS, Push) has its own strategy
  * - Use case orchestrates sending through all channels
  * - New channels are added without modifying this code (Open/Closed Principle)
+ *
+ * DIP: Depends on INotificationRepository and INotificationSenderFactory (domain interfaces)
  */
 export interface SendNotificationInput {
   recipientId: string;
@@ -38,12 +48,23 @@ export interface SendNotificationOutput {
 @Injectable()
 export class SendNotificationsUseCase {
   constructor(
+    @Inject(NOTIFICATION_REPOSITORY)
     private readonly notificationRepository: INotificationRepository,
-    // This will be a factory that returns the correct strategy based on the channel
-    // Will be implemented in infrastructure
-    private readonly notificationSenderFactory: NotificationSenderFactory,
+    @Inject(NOTIFICATION_SENDER_FACTORY)
+    private readonly notificationSenderFactory: INotificationSenderFactory,
+    @Inject(ID_GENERATOR)
+    private readonly idGenerator: IIdGenerator,
   ) {}
 
+  /**
+   * Send notifications to the recipient
+   * @param input - The input for the use case SendNotificationInput {
+   * - recipientId: The ID of the recipient
+   * - message: The message to send
+   * - channels: The channels to send the notification through
+   * }
+   * @returns The output of the use case
+   */
   async execute(input: SendNotificationInput): Promise<SendNotificationOutput> {
     const results: SendNotificationOutput['notifications'] = [];
 
@@ -51,7 +72,7 @@ export class SendNotificationsUseCase {
     for (const channel of input.channels) {
       // 1. Create notification (domain entity)
       const notification = new Notification(
-        this.generateId(),
+        this.idGenerator.generate(),
         input.recipientId,
         channel,
         input.message,
@@ -99,17 +120,4 @@ export class SendNotificationsUseCase {
 
     return { notifications: results };
   }
-
-  private generateId(): string {
-    // TODO: Implement unique ID generation
-    throw new Error('ID generation not implemented');
-  }
-}
-
-/**
- * Factory to get the correct sending strategy based on the channel
- * Will be implemented in infrastructure layer
- */
-export interface NotificationSenderFactory {
-  getSender(channel: NotificationChannel): INotificationSender;
 }

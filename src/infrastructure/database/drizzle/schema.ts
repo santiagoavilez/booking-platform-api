@@ -65,3 +65,29 @@ export const appointments = pgTable('appointments', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const notificationStatusEnum = pgEnum('notification_status', [
+  'PENDING',
+  'SENT',
+  'FAILED',
+]);
+
+export const notificationChannelEnum = pgEnum('notification_channel', [
+  'EMAIL',
+  'SMS',
+  'PUSH',
+  'WHATSAPP',
+]);
+/**
+ * Drizzle schema for notifications table
+ * Stores notifications for the system
+ */
+export const notifications = pgTable('notifications', {
+  id: text('id').primaryKey(),
+  recipientId: text('recipient_id').notNull(),
+  message: text('message').notNull(),
+  channel: notificationChannelEnum('channel').notNull(),
+  status: notificationStatusEnum('status').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

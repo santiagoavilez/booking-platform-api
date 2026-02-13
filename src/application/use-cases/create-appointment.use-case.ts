@@ -14,6 +14,8 @@ import {
   ID_GENERATOR,
 } from '../../interfaces/providers';
 import { EnsureProfessionalExistsUseCase } from './ensure-professional-exists.use-case';
+import { SendNotificationsUseCase } from './send-notifications.use-case';
+import { NotificationChannel } from '../../domain/enums/notification-channel.enum';
 
 /**
  * ARCHITECTURAL DECISION:
@@ -27,6 +29,14 @@ import { EnsureProfessionalExistsUseCase } from './ensure-professional-exists.us
  *   - Create the appointment
  *   - Trigger notifications (will be done in another use case or event)
  */
+
+/**
+ * CreateAppointmentInput - The input for the use case
+ * @property professionalId - The ID of the professional
+ * @property clientId - The ID of the client
+ * @property startsAt - The start time of the appointment
+ * @property endsAt - The end time of the appointment
+ */
 export interface CreateAppointmentInput {
   professionalId: string;
   clientId: string;
@@ -34,6 +44,14 @@ export interface CreateAppointmentInput {
   endsAt: Date;
 }
 
+/**
+ * CreateAppointmentOutput - The output for the use case
+ * @property id - The ID of the appointment
+ * @property professionalId - The ID of the professional
+ * @property clientId - The ID of the client
+ * @property startsAt - The start time of the appointment
+ * @property endsAt - The end time of the appointment
+ */
 export interface CreateAppointmentOutput {
   id: string;
   professionalId: string;
@@ -54,8 +72,25 @@ export class CreateAppointmentUseCase {
     @Inject(ID_GENERATOR)
     private readonly idGenerator: IIdGenerator,
     private readonly ensureProfessionalExistsUseCase: EnsureProfessionalExistsUseCase,
+    private readonly sendNotificationsUseCase: SendNotificationsUseCase,
   ) {}
 
+  /**
+   * Create an appointment
+   * @param input - The input for the use case CreateAppointmentInput {
+   * - professionalId: The ID of the professional
+   * - clientId: The ID of the client
+   * - startsAt: The start time of the appointment
+   * - endsAt: The end time of the appointment
+   * }
+   * @returns The output of the use case CreateAppointmentOutput {
+   * - id: The ID of the appointment
+   * - professionalId: The ID of the professional
+   * - clientId: The ID of the client
+   * - startsAt: The start time of the appointment
+   * - endsAt: The end time of the appointment
+   * }
+   */
   async execute(
     input: CreateAppointmentInput,
   ): Promise<CreateAppointmentOutput> {
@@ -138,6 +173,27 @@ export class CreateAppointmentUseCase {
     // 9. Persist
     const savedAppointment =
       await this.appointmentRepository.create(appointment);
+
+    const professional = await this.userRepository.findById(
+      savedAppointment.professionalId,
+    );
+    const clientUser = await this.userRepository.findById(
+      savedAppointment.clientId,
+    );
+    const messageToClient = `Appointment scheduled: ${savedAppointment.startsAt.toISOString()} - ${savedAppointment.endsAt.toISOString()} with ${professional?.firstName ?? ''} ${professional?.lastName ?? ''}`;
+    const messageToProfessional = `Appointment scheduled: ${savedAppointment.startsAt.toISOString()} - ${savedAppointment.endsAt.toISOString()} with ${clientUser?.firstName ?? ''} ${clientUser?.lastName ?? ''}`;
+    const channels = [NotificationChannel.EMAIL, NotificationChannel.WHATSAPP];
+    await this.sendNotificationsUseCase.execute({
+      recipientId: savedAppointment.clientId,
+      message: messageToClient,
+      channels,
+    });
+
+    await this.sendNotificationsUseCase.execute({
+      recipientId: savedAppointment.professionalId,
+      message: messageToProfessional,
+      channels,
+    });
 
     // 10. Return result
     return {
