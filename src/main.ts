@@ -8,6 +8,8 @@ async function bootstrap() {
   // CORS - permite requests desde el frontend
   const origins = process.env.CORS_ORIGIN?.split(',') ?? [
     'http://localhost:5173',
+    // cualquier localhost * que se pueda usar para el frontend
+    'http://localhost:*',
   ];
   app.enableCors({
     origin: origins,
