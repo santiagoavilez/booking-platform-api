@@ -1,5 +1,7 @@
 // src/interfaces/http/dto/get-availability-response.dto.ts
 
+import { ApiProperty } from '@nestjs/swagger';
+
 /**
  * ARCHITECTURAL DECISION:
  * - What: DTO for availability slot response
@@ -12,10 +14,20 @@
  * - Does not contain business logic
  */
 export class AvailabilitySlotResponseDto {
+  @ApiProperty({ description: 'Slot ID', example: 'uuid-slot-123' })
   id: string;
-  dayOfWeek: number; // 0-6 (Sunday-Saturday)
-  startTime: string; // HH:mm
-  endTime: string; // HH:mm
+
+  @ApiProperty({
+    description: 'Day of week (0 = Sunday, 6 = Saturday)',
+    example: 1,
+  })
+  dayOfWeek: number;
+
+  @ApiProperty({ description: 'Start time (HH:mm)', example: '09:00' })
+  startTime: string;
+
+  @ApiProperty({ description: 'End time (HH:mm)', example: '17:00' })
+  endTime: string;
 }
 
 /**
@@ -30,6 +42,9 @@ export class AvailabilitySlotResponseDto {
  * - Does not contain business logic
  */
 export class ProfessionalInfoDto {
+  @ApiProperty({ description: 'Professional first name', example: 'John' })
   firstName: string;
+
+  @ApiProperty({ description: 'Professional last name', example: 'Doe' })
   lastName: string;
 }

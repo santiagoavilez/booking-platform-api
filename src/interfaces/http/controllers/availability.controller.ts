@@ -14,6 +14,15 @@ import {
   Req,
   Param,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiOkResponse,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { DefineAvailabilityUseCase } from '../../../application/use-cases/define-availability.use-case';
 import {
   GetProfessionalAvailabilityUseCase,
@@ -40,6 +49,8 @@ import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
  * - All endpoints are protected by JWT authentication
  * - Users can only modify their own availability (extracted from JWT token)
  */
+@ApiTags('availability')
+@ApiBearerAuth()
 @Controller('availability')
 @UseGuards(JwtAuthGuard)
 export class AvailabilityController {
@@ -60,6 +71,37 @@ export class AvailabilityController {
    */
   @Post('me')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Define my availability',
+    description:
+      'Sets or updates the weekly availability schedule for the authenticated professional. Professional ID is taken from the JWT. Only enabled days with time slots are stored. Time format: HH:mm (24h).',
+  })
+  @ApiBody({ type: DefineAvailabilityDto })
+  @ApiOkResponse({
+    description: 'Availability schedule updated successfully',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          message: 'Availability schedule updated successfully',
+          createdSlots: 5,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Invalid time format, invalid day of week, invalid range, or overlapping slots',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Only professionals can define availability',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No authentication token provided or invalid token',
+  })
   async defineAvailability(
     @Req() req: any,
     @Body() dto: DefineAvailabilityDto,
@@ -140,6 +182,39 @@ export class AvailabilityController {
    * }
    */
   @Get('me')
+  @ApiOperation({
+    summary: 'Get my availability',
+    description:
+      'Returns the weekly availability schedule of the authenticated professional. Professional ID is taken from the JWT. Only professionals can call this endpoint.',
+  })
+  @ApiOkResponse({
+    description: 'Availability slots and professional info',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          availabilities: [
+            {
+              id: 'uuid-slot-1',
+              dayOfWeek: 1,
+              startTime: '09:00',
+              endTime: '17:00',
+            },
+          ],
+          professional: { firstName: 'John', lastName: 'Doe' },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Only professionals can retrieve availability',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({
+    status: 401,
+    description: 'No authentication token provided or invalid token',
+  })
   async getMyAvailability(@Req() req: any) {
     try {
       // Get professionalId from authenticated user (JWT token)
@@ -217,6 +292,44 @@ export class AvailabilityController {
    * }
    */
   @Get(':professionalId')
+  @ApiOperation({
+    summary: 'Get professional availability',
+    description:
+      'Returns the weekly availability schedule of a given professional by ID. Any authenticated user can query any professional. Useful for clients when booking an appointment.',
+  })
+  @ApiParam({
+    name: 'professionalId',
+    description: 'UUID of the professional',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiOkResponse({
+    description: 'Availability slots and professional info',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          availabilities: [
+            {
+              id: 'uuid-slot-1',
+              dayOfWeek: 1,
+              startTime: '09:00',
+              endTime: '17:00',
+            },
+          ],
+          professional: { firstName: 'John', lastName: 'Doe' },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'The requested user is not a professional',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({
+    status: 401,
+    description: 'No authentication token provided or invalid token',
+  })
   async getProfessionalAvailability(
     @Param('professionalId') professionalId: string,
   ) {

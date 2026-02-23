@@ -1,5 +1,6 @@
 // src/interfaces/http/dto/create-appointment.dto.ts
 
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDateString,
   IsNotEmpty,
@@ -18,17 +19,27 @@ import {
  * - clientId is taken from the authenticated user (JWT), not from body
  */
 export class CreateAppointmentDto {
+  @ApiProperty({
+    description: 'UUID of the professional to book with',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @IsString()
   @IsNotEmpty()
   @IsUUID()
   professionalId: string;
 
-  /** Date in YYYY-MM-DD format (e.g. "2026-02-02") */
+  @ApiProperty({
+    description: 'Date in YYYY-MM-DD format (UTC)',
+    example: '2026-02-25',
+  })
   @IsDateString()
   @IsNotEmpty()
   date: string;
 
-  /** Time in HH:mm format (e.g. "09:00"). Interpreted as UTC. */
+  @ApiProperty({
+    description: 'Start time in HH:mm format (UTC)',
+    example: '09:00',
+  })
   @IsString()
   @IsNotEmpty()
   @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
@@ -36,7 +47,10 @@ export class CreateAppointmentDto {
   })
   startTime: string;
 
-  /** Time in HH:mm format (e.g. "10:00"). Interpreted as UTC. */
+  @ApiProperty({
+    description: 'End time in HH:mm format (UTC)',
+    example: '10:00',
+  })
   @IsString()
   @IsNotEmpty()
   @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {

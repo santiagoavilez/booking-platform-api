@@ -33,6 +33,17 @@ async function bootstrap() {
       'API for the booking platform - appointments and availability',
     )
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Enter the JWT token returned by login or register',
+        in: 'header',
+      },
+      'bearer', // name used by @ApiBearerAuth() on protected routes
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

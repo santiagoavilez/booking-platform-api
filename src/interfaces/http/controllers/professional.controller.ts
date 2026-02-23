@@ -1,6 +1,13 @@
 // src/interfaces/http/controllers/professional.controller.ts
 
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiOkResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { SearchProfessionalsUseCase } from '../../../application/use-cases/search-professionals.use-case';
 import { SearchProfessionalsQueryDto } from '../dto/search-professionals-query.dto';
 import { toProfessionalListItemDtoFromApp } from '../mappers/professional.mapper';
@@ -19,6 +26,8 @@ const DEFAULT_LIMIT = 6;
  * - Is in Interfaces layer (outermost)
  * - Is THIN: only orchestrates, no business logic
  */
+@ApiTags('professionals')
+@ApiBearerAuth()
 @Controller('professionals')
 @UseGuards(JwtAuthGuard)
 export class ProfessionalController {
@@ -32,6 +41,37 @@ export class ProfessionalController {
    * Available to any authenticated user (clients and professionals).
    */
   @Get()
+  @ApiOperation({
+    summary: 'Search professionals',
+    description:
+      'Returns a paginated list of professionals. Optional search filter by full name (firstName + lastName). Available to any authenticated user (clients and professionals).',
+  })
+  @ApiOkResponse({
+    description: 'Paginated list of professionals',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          items: [
+            {
+              id: 'uuid-1',
+              firstName: 'John',
+              lastName: 'Doe',
+              fullName: 'John Doe',
+            },
+          ],
+          total: 1,
+          page: 1,
+          limit: 6,
+          totalPages: 1,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No authentication token provided or invalid token',
+  })
   async search(@Query() query: SearchProfessionalsQueryDto): Promise<{
     success: true;
     data: {
