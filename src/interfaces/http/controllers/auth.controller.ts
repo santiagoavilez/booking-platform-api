@@ -9,6 +9,14 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { RegisterUserUseCase } from '../../../application/use-cases/auth/register-user.use-case';
 import { RegisterUserDto } from '../dto/register-user.dto';
 import { LoginDto } from '../dto/login.dto';
@@ -28,6 +36,7 @@ import { RefreshTokenDto } from '../dto/refresh-token.dto';
  * - Transforms HTTP DTOs to use case inputs
  * - Handles errors and converts them to appropriate HTTP responses
  */
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -42,6 +51,21 @@ export class AuthController {
    */
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Register a new user',
+    description:
+      'Creates a new user (CLIENT or PROFESSIONAL). Returns user data and tokens.',
+  })
+  @ApiBody({ type: RegisterUserDto })
+  @ApiCreatedResponse({ description: 'User registered successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or validation error',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'User with this email already exists',
+  })
   async register(@Body() dto: RegisterUserDto) {
     try {
       // Transform HTTP DTO to use case input
@@ -81,6 +105,17 @@ export class AuthController {
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Login',
+    description:
+      'Authenticates user with email and password. Returns access and refresh tokens.',
+  })
+  @ApiBody({ type: LoginDto })
+  @ApiOkResponse({ description: 'Login successful, returns tokens' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid credentials or validation error',
+  })
   async login(@Body() dto: LoginDto) {
     try {
       const result = await this.loginUseCase.execute(dto);
@@ -106,6 +141,14 @@ export class AuthController {
    */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Refresh token',
+    description:
+      'Exchanges a valid refresh token for new access and refresh tokens.',
+  })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiOkResponse({ description: 'New tokens returned successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired refresh token' })
   async refresh(@Body() dto: RefreshTokenDto) {
     try {
       const result = await this.refreshTokenUseCase.execute({
