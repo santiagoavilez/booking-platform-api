@@ -107,7 +107,7 @@ export class AppointmentController {
   async create(
     @Req() req: AuthenticatedRequest,
     @Body() dto: CreateAppointmentDto,
-  ) {
+  ): Promise<{ success: true; data: AppointmentResponseDto }> {
     const clientId = req.user.userId;
 
     try {
@@ -286,7 +286,7 @@ export class AppointmentController {
   async findByProfessionalAndDate(
     @Param('professionalId') professionalId: string,
     @Query('date') date: string | undefined,
-  ) {
+  ): Promise<{ success: true; data: AppointmentResponseDto[] }> {
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       throw new BadRequestException(
         'Query parameter "date" is required and must be YYYY-MM-DD',

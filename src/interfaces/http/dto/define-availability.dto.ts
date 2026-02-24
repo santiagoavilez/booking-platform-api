@@ -75,15 +75,6 @@ export class DayScheduleDto {
 }
 
 /**
- * ARCHITECTURAL DECISION:
- * - What: DTO to validate weekly availability schedule from frontend
- * - Why: Validates HTTP data before passing to use case
- * - Structure: Accepts the frontend's format with enabled/disabled days
- *
- * CLEAN ARCHITECTURE:
- * - Is in Interfaces layer (HTTP adapter)
- * - Is transformed to DefineAvailabilityInput before calling the use case
- * - The controller handles the transformation from this DTO to use case input
  *
  * FRONTEND PAYLOAD FORMAT:
  * {

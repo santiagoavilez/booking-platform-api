@@ -11,14 +11,16 @@ import {
 import { Role } from '../../../domain/enums/role.enum';
 
 /**
- * ARCHITECTURAL DECISION:
- * - What: DTO to validate the input of the register endpoint
- * - Why: Validate HTTP data before passing it to the use case
- * - Uses class-validator for automatic validation with NestJS
+ * DTO to validate the input of the register endpoint
  *
- * CLEAN ARCHITECTURE:
- * - Is in Interfaces layer (HTTP adapter)
- * - Is transformed to RegisterUserInput before calling the use case
+ * @example
+ * {
+ *   email: 'user@example.com',
+ *   password: 'password123',
+ *   role: Role.CLIENT,
+ *   firstName: 'John',
+ *   lastName: 'Doe',
+ * }
  */
 export class RegisterUserDto {
   @ApiProperty({ description: 'User email', example: 'user@example.com' })

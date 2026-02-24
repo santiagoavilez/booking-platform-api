@@ -12,11 +12,13 @@ import {
 /**
  * DTO for creating an appointment
  * Request body for POST /appointments
- *
- * ARCHITECTURAL DECISION:
- * - What: Frontend sends date and time separately (date, startTime, endTime)
- * - Why: Aligns with UI (date picker + time slots), no client-side datetime parsing
- * - clientId is taken from the authenticated user (JWT), not from body
+ * @example
+ * {
+ *   professionalId: '123e4567-e89b-12d3-a456-426614174000',
+ *   date: '2026-02-25',
+ *   startTime: '09:00',
+ *   endTime: '10:00',
+ * }
  */
 export class CreateAppointmentDto {
   @ApiProperty({
