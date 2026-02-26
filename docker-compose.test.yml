@@ -1,0 +1,32 @@
+# Override/compose file for running tests. Use:
+#   docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --build --abort-on-container-exit test
+
+services:
+  test:
+    build:
+      context: .
+      target: builder
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres123@db-test:5432/booking-platform-test
+      JWT_SECRET: your-256-bit-secret
+      JWT_EXPIRATION_TIME: 48h
+    depends_on:
+      db-test:
+        condition: service_healthy
+    command: sh -c "pnpm exec drizzle-kit migrate && pnpm test"
+    profiles:
+      - test
+
+  db-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: booking-platform-test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    profiles:
+      - test

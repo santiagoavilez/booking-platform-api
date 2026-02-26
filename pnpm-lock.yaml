@@ -47,6 +47,9 @@ importers:
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.1(@types/pg@8.16.0)(pg@8.17.1)
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
       pg:
         specifier: ^8.17.1
         version: 8.17.1
