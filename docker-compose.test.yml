@@ -13,7 +13,7 @@ services:
     depends_on:
       db-test:
         condition: service_healthy
-    command: sh -c "pnpm exec drizzle-kit migrate && pnpm test"
+    command: sh -c "pnpm exec drizzle-kit migrate && pnpm test && pnpm run test:e2e"
     profiles:
       - test
 
