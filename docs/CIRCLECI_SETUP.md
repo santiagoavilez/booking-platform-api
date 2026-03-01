@@ -4,7 +4,7 @@
 
 - **Archivo corregido**: `.circleci/config.yml` (antes estaba como `config,yml` con coma)
 - **COVERALLS_REPO_TOKEN**: Eliminado de `.env` por seguridad. Debe configurarse solo en CircleCI
-- **Coverage**: Ya funciona correctamente con `pnpm run test:cov` → genera `coverage/lcov.info`
+- **Coverage**: `pnpm run test:cov:all` ejecuta unit + E2E con cobertura, fusiona los reportes y genera `coverage/lcov.info` para Coveralls
 - **Build job**: Simplificado para verificar el build sin ejecutar la app (no hay DB en ese job)
 
 ---

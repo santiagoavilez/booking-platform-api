@@ -32,12 +32,8 @@ jobs:
           command: pnpm exec drizzle-kit migrate
 
       - run:
-          name: Run unit tests with coverage
-          command: pnpm run test:cov
-
-      - run:
-          name: Run E2E tests
-          command: pnpm run test:e2e
+          name: Run unit + E2E tests with merged coverage
+          command: pnpm run test:cov:all
 
       - coveralls/upload
 
