@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  node: circleci/node@5.1.0
+  node: circleci/node@7.2.1
   coveralls: coveralls/coveralls@2.2.4
 
 jobs:
@@ -57,7 +57,7 @@ jobs:
 
       - run:
           name: Build application
-          command: pnpm run build
+          command: npm run build
 
       - run:
           name: Verify build output
