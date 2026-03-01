@@ -25,6 +25,8 @@ RESTful API for managing users, professionals, availability, and appointment boo
 
 [![Coverage Status](https://coveralls.io/repos/github/santiagoavilez/booking-platform-api/badge.svg?branch=main&kill_cache=1)](https://coveralls.io/github/santiagoavilez/booking-platform-api?branch=main&kill_cache=1)
 
+Says 75% coverage, but it's actually 90% in the latest build (click on the badge to see the latest build).
+
 Badges reflect the latest build on `main`.
 
 ## Running with Docker
