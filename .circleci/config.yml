@@ -20,23 +20,8 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: Enable pnpm
-          command: corepack enable && corepack prepare pnpm@latest --activate
-
-      - restore_cache:
-          keys:
-            - pnpm-deps-v1-{{ checksum "pnpm-lock.yaml" }}
-            - pnpm-deps-v1-
-
-      - run:
-          name: Install dependencies
-          command: pnpm install --frozen-lockfile
-
-      - save_cache:
-          key: pnpm-deps-v1-{{ checksum "pnpm-lock.yaml" }}
-          paths:
-            - node_modules
+      - node/install-packages:
+          pkg-manager: pnpm
 
       - run:
           name: Wait for PostgreSQL
@@ -69,10 +54,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-
-      - run:
-          name: Enable pnpm
-          command: corepack enable && corepack prepare pnpm@latest --activate
 
       - run:
           name: Build application
