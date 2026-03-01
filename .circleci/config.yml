@@ -1,0 +1,91 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+  coveralls: coveralls/coveralls@2.2.4
+
+jobs:
+  test:
+    docker:
+      - image: cimg/node:20.18
+        environment:
+          DATABASE_URL: postgresql://postgres:postgres123@localhost:5432/booking-platform-test
+          JWT_SECRET: your-256-bit-secret
+          JWT_EXPIRATION_TIME: 48h
+      - image: cimg/postgres:16.2
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres123
+          POSTGRES_DB: booking-platform-test
+    steps:
+      - checkout
+
+      - run:
+          name: Enable pnpm
+          command: corepack enable && corepack prepare pnpm@latest --activate
+
+      - restore_cache:
+          keys:
+            - pnpm-deps-v1-{{ checksum "pnpm-lock.yaml" }}
+            - pnpm-deps-v1-
+
+      - run:
+          name: Install dependencies
+          command: pnpm install --frozen-lockfile
+
+      - save_cache:
+          key: pnpm-deps-v1-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - node_modules
+
+      - run:
+          name: Wait for PostgreSQL
+          command: sleep 5
+
+      - run:
+          name: Run migrations
+          command: pnpm exec drizzle-kit migrate
+
+      - run:
+          name: Run unit tests with coverage
+          command: pnpm run test:cov
+
+      - run:
+          name: Run E2E tests
+          command: pnpm run test:e2e
+
+      - coveralls/upload:
+          path: coverage/lcov.info
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+            - node_modules
+
+  build_and_run:
+    docker:
+      - image: cimg/node:20.18
+    steps:
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: Enable pnpm
+          command: corepack enable && corepack prepare pnpm@latest --activate
+
+      - run:
+          name: Build application
+          command: pnpm run build
+
+      - run:
+          name: Verify build output
+          command: test -f dist/src/main.js && echo "Build successful"
+
+workflows:
+  build_test_deploy:
+    jobs:
+      - test
+      - build_and_run:
+          requires:
+            - test

@@ -13,16 +13,56 @@ RESTful API for managing users, professionals, availability, and appointment boo
 - **Architecture**: Clean Architecture
 - **Database**: PostgreSQL (MVP)
 - **ORM**: Drizzle
-- **Authentication**: JWT
+- **Authentication**:
+
+## Badges
+
+[![CircleCI](https://dl.circleci.com/status-badge/img/circleci/LJRmAhaxKHfGNP9ixXPEW7/H1wYzKzRDxEguLd5ym9xyf/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/circleci/LJRmAhaxKHfGNP9ixXPEW7/H1wYzKzRDxEguLd5ym9xyf/tree/main)
+
+## Running with Docker
+
+Only Docker is required. From the project root:
+
+| Mode                             | Windows (PowerShell)      | Linux / Mac / Git Bash      |
+| -------------------------------- | ------------------------- | --------------------------- |
+| **Dev** (watch mode, hot reload) | `.\scripts\start-dev.ps1` | `bash scripts/start-dev.sh` |
+| **Prod** (production build)      | `.\scripts\start-app.ps1` | `bash scripts/start-app.sh` |
+| **Test** (unit + E2E)            | `.\scripts\run-tests.ps1` | `bash scripts/run-tests.sh` |
+
+API: http://localhost:3000 | Swagger: http://localhost:3000/api
 
 ## Technical Decisions
 
-### Drizzle vs Prisma
+### NestJS vs Express vs Fastify
 
-**Drizzle** was chosen over Prisma as the ORM for the following reasons:
+**NestJS** was chosen as the framework for the following reasons:
+
+- **Structure and conventions**: Built-in modular architecture, dependency injection, and clear separation of concerns reduce boilerplate and enforce consistency.
+- **TypeScript-first**: Native TypeScript support with decorators, making it ideal for large-scale applications.
+- **Enterprise-ready**: Guards, interceptors, pipes, and middleware out of the box simplify authentication, validation, and error handling.
+
+### TypeScript vs JavaScript
+
+**TypeScript** was chosen for the following reasons:
+
+- **Type safety**: Catches errors at compile time, reducing runtime bugs and improving refactoring confidence.
+- **Better tooling**: Enhanced IDE support, autocomplete, and documentation through type definitions.
+- **Maintainability**: Self-documenting code and clearer contracts between modules, especially in a layered architecture.
+
+### Clean Architecture
+
+**Clean Architecture** was adopted for the following reasons:
+
+- **Framework independence**: The domain layer has no dependencies on NestJS, Drizzle, or external services, making it testable and portable.
+- **Testability**: Use cases depend on interfaces (repositories, services), allowing easy mocking in unit tests.
+- **Flexibility**: Swapping ORMs, databases, or HTTP frameworks requires changes only in the infrastructure and interfaces layers, not in business logic.
+
+### Drizzle vs Prisma vs TypeORM
+
+**Drizzle** was chosen over Prisma and TypeORM as the ORM for the following reasons:
 
 - **SQL-like syntax**: Drizzle exposes an API very close to standard SQL, making it easier to write complex queries and leverage existing SQL knowledge.
-- **Better performance**: Lower runtime overhead and more efficient queries compared to alternatives like Prisma.
+- **Better performance**: Lower runtime overhead and more efficient queries compared to alternatives like Prisma and TypeORM.
 - **Lighter weight**: Fewer dependencies and a smaller bundle, resulting in faster builds and lower resource usage.
 
 ## Project Structure
