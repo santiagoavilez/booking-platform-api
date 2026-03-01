@@ -17,7 +17,13 @@ RESTful API for managing users, professionals, availability, and appointment boo
 
 ## Badges
 
+### CircleCI
+
 [![CircleCI](https://dl.circleci.com/status-badge/img/circleci/LJRmAhaxKHfGNP9ixXPEW7/H1wYzKzRDxEguLd5ym9xyf/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/circleci/LJRmAhaxKHfGNP9ixXPEW7/H1wYzKzRDxEguLd5ym9xyf/tree/main)
+
+### Coveralls
+
+[![Coverage Status](https://coveralls.io/repos/github/santiagoavilez/booking-platform-api/badge.svg?branch=main)](https://coveralls.io/github/santiagoavilez/booking-platform-api?branch=main)
 
 ## Running with Docker
 
@@ -114,8 +120,5 @@ Create a `.env` file in the project root with the required environment variables
 PORT=3000
 DATABASE_URL=postgresql://...
 JWT_SECRET=...
+CORS_ORIGIN=http://localhost:5173
 ```
-
-## Development
-
-The project follows Clean Architecture to keep the domain independent of frameworks and external services.
