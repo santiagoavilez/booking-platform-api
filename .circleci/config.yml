@@ -39,8 +39,7 @@ jobs:
           name: Run E2E tests
           command: pnpm run test:e2e
 
-      - coveralls/upload:
-          path: coverage/lcov.info
+      - coveralls/upload
 
       - persist_to_workspace:
           root: .
