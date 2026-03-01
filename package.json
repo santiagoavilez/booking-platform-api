@@ -20,7 +20,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:e2e:cov": "jest --config ./test/jest-e2e.json --coverage",
-    "test:cov:all": "jest --coverage && jest --config ./test/jest-e2e.json --coverage && node scripts/merge-coverage.js"
+    "test:cov:all": "jest --coverage && jest --config ./test/jest-e2e.json --coverage && node scripts/merge-coverage.js",
+    "test:unit": "jest",
+    "test:unit:cov": "jest --coverage"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -91,11 +93,15 @@
       "main\\.ts$",
       "app\\.module\\.ts$",
       "\\.spec\\.ts$",
-      "\\.e2e-spec\\.ts$"
+      "\\.e2e-spec\\.ts$",
+      "src/shared/index\\.ts$",
+      "src/shared/utils/index\\.ts$"
     ],
     "testEnvironment": "node",
     "transformIgnorePatterns": [
       "node_modules/(?!(.pnpm|uuid)/)"
-    ]
+    ],
+    "testTimeout": 10000,
+    "maxWorkers": 4
   }
 }

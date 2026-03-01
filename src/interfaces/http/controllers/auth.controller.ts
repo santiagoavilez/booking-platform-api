@@ -20,7 +20,7 @@ import {
 import { RegisterUserUseCase } from '../../../application/use-cases/auth/register-user.use-case';
 import { RegisterUserDto } from '../dto/register-user.dto';
 import { LoginDto } from '../dto/login.dto';
-import { LoginUseCase } from 'src/application/use-cases/auth/login.use-case';
+import { LoginUseCase } from '../../../application/use-cases/auth/login.use-case';
 import { RefreshTokenUseCase } from '../../../application/use-cases/auth/refresh-token.use-case';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 
