@@ -8,9 +8,11 @@ import { CreateAppointmentUseCase } from '../../../application/use-cases/create-
 import { GetMyAppointmentsUseCase } from '../../../application/use-cases/get-my-appointments.use-case';
 import { GetAppointmentsByProfessionalAndDateUseCase } from '../../../application/use-cases/get-appointments-by-professional-and-date.use-case';
 import { AuthenticatedRequest, JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { Role } from '../../../domain/enums/role.enum';
+import { CreateAppointmentDto } from '../dto/create-appointment.dto';
 
 const mockAuthenticatedRequest = {
-  user: { userId: 'client-123', role: 'CLIENT' },
+  user: { userId: 'client-123', role: Role.CLIENT },
 };
 
 const mockJwtGuard = {
@@ -69,7 +71,7 @@ describe('AppointmentController', () => {
       startTime: '09:00',
       endTime: '10:00',
     };
-    const req = { user: { userId: 'client-123', role: 'CLIENT' } };
+    const req = { user: { userId: 'client-123', role: Role.CLIENT } };
 
     it('should throw NotFoundException when client not found', async () => {
       mockCreateAppointmentUseCase.execute.mockRejectedValue(
@@ -77,7 +79,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -87,7 +92,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -97,7 +105,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -107,7 +118,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -117,7 +131,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -127,7 +144,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -137,7 +157,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -147,7 +170,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -157,7 +183,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -167,7 +196,10 @@ describe('AppointmentController', () => {
       );
 
       await expect(
-        controller.create(req as any, validDto as any),
+        controller.create(
+          req as AuthenticatedRequest,
+          validDto as CreateAppointmentDto,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });

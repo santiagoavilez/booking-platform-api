@@ -6,7 +6,7 @@ import { AuthController } from './auth.controller';
 import { RegisterUserUseCase } from '../../../application/use-cases/auth/register-user.use-case';
 import { LoginUseCase } from '../../../application/use-cases/auth/login.use-case';
 import { RefreshTokenUseCase } from '../../../application/use-cases/auth/refresh-token.use-case';
-import { Role } from 'src/domain/enums/role.enum';
+import { Role } from '../../../domain/enums/role.enum';
 
 describe('AuthController', () => {
   let controller: AuthController;
