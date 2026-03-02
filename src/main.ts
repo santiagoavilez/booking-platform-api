@@ -11,17 +11,36 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS - permite requests desde el frontend
-  const origins = process.env.CORS_ORIGIN?.split(',') ?? [
-    'http://localhost:5173',
-    // cualquier localhost * que se pueda usar para el frontend
-    'http://localhost:*',
-  ];
-  app.enableCors({
+  // CORS - allows requests from the frontend
+  // Note: 'http://localhost:*' is NOT valid - CORS compares exact origin strings.
+  // Use comma-separated list in CORS_ORIGIN for production (e.g. https://myapp.railway.app).
+  const originsEnv = process.env.CORS_ORIGIN?.trim();
+  const origins = originsEnv
+    ? originsEnv
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean)
+    : [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:3000',
+      ];
+
+  const corsOptions = {
     origin: origins,
     credentials: true,
-  });
+  };
+  app.enableCors(corsOptions);
 
+  // Log actual CORS config applied (for verification in Railway logs)
+  console.log('[CORS] enabled:', true);
+  console.log('[CORS] options:', JSON.stringify(corsOptions, null, 2));
+  if (process.env.NODE_ENV === 'production' && !originsEnv) {
+    console.warn(
+      '[CORS] WARNING: CORS_ORIGIN not set in production. Only localhost origins are allowed. Set CORS_ORIGIN to your frontend URL(s).',
+    );
+  }
   // Enable global DTO validation
   app.useGlobalPipes(
     new ValidationPipe({
