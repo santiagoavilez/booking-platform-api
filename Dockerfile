@@ -38,6 +38,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./
 
-EXPOSE 8080
+# Default port; Railway and other hosts can override via PORT env at runtime
+ENV PORT=3000
+EXPOSE 3000
+
 # Migrate then start (override in compose if needed)
 CMD ["sh", "-c", "pnpm exec drizzle-kit migrate && pnpm run start:prod"]
