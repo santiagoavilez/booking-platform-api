@@ -38,7 +38,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./
 
-EXPOSE 3000
-
+EXPOSE 8080
 # Migrate then start (override in compose if needed)
 CMD ["sh", "-c", "pnpm exec drizzle-kit migrate && pnpm run start:prod"]
