@@ -1,6 +1,11 @@
+import type { Server } from 'http';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import {
+  DocumentBuilder,
+  type OpenAPIObject,
+  SwaggerModule,
+} from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -45,9 +50,13 @@ async function bootstrap() {
       'bearer', // name used by @ApiBearerAuth() on protected routes
     )
     .build();
-  const document = SwaggerModule.createDocument(app, config);
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
-  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
+  console.log('ENV PORT:', process.env.PORT);
+  const server = (await app.listen(
+    process.env.PORT ?? 3000,
+    '0.0.0.0',
+  )) as Server;
+  console.log('Listening on:', server.address());
 }
-bootstrap();
+void bootstrap();
