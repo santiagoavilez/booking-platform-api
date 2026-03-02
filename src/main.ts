@@ -14,11 +14,12 @@ async function bootstrap() {
   // CORS - allows requests from the frontend
   // Note: 'http://localhost:*' is NOT valid - CORS compares exact origin strings.
   // Use comma-separated list in CORS_ORIGIN for production (e.g. https://myapp.railway.app).
+  // Browser sends Origin without path (e.g. https://example.com), so we normalize by stripping trailing slash.
   const originsEnv = process.env.CORS_ORIGIN?.trim();
   const origins = originsEnv
     ? originsEnv
         .split(',')
-        .map((o) => o.trim())
+        .map((o) => o.trim().replace(/\/+$/, ''))
         .filter(Boolean)
     : [
         'http://localhost:5173',
